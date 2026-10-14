@@ -11,3 +11,300 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum EquipmentType {
+  PUMP
+  COMPRESSOR
+  MOTOR
+}
+
+enum ReportStatus {
+  OPEN
+  CLOSED
+}
+
+model Equipment {
+  id        Int            @id @default(autoincrement())
+  type      EquipmentType
+  tag       String         @unique
+  name      String
+  createdAt DateTime       @default(now())
+  reports   Report[]
+  history   HistoryEntry[]
+}
+
+model ManualChunk {
+  id            String        @id
+  equipmentType EquipmentType
+  document      String
+  sectionRef    String
+  heading       String
+  content       String
+  embedding     Float[]
+  createdAt     DateTime      @default(now())
+
+  @@index([equipmentType])
+}
+
+model Report {
+  id               Int                @id @default(autoincrement())
+  equipmentId      Int
+  equipment        Equipment          @relation(fields: [equipmentId], references: [id])
+  reportedBy       String
+  issue            String
+  status           ReportStatus       @default(OPEN)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  events           ReportEvent[]
+  readings         SensorReading[]
+  thresholdResults ThresholdResult[]
+  analysisRuns     AnalysisRun[]
+  hypotheses       Hypothesis[]
+  questions        FollowUpQuestion[]
+  steps            InspectionStep[]
+  observations     Observation[]
+  findings         Finding[]
+  workOrder        WorkOrder?
+  history          HistoryEntry[]
+
+  @@index([equipmentId, createdAt])
+}
+
+model ReportEvent {
+  id          Int       @id @default(autoincrement())
+  reportId    Int
+  report      Report    @relation(fields: [reportId], references: [id])
+  occurredAt  DateTime?
+  description String
+
+  @@index([reportId])
+}
+
+model SensorReading {
+  id         Int       @id @default(autoincrement())
+  reportId   Int
+  report     Report    @relation(fields: [reportId], references: [id])
+  sensor     String
+  value      Float
+  unit       String
+  recordedAt DateTime?
+  source     String?
+
+  @@index([reportId])
+}
+
+enum ThresholdStatus {
+  OK
+  WARNING
+  CRITICAL
+  MISSING
+  CONFLICTING
+}
+
+enum AnalysisStatus {
+  SUCCESS
+  DEGRADED
+  FAILED
+}
+
+enum RetrievalMode {
+  HYBRID
+  KEYWORD_ONLY
+  NONE
+}
+
+enum Confidence {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum HypothesisStatus {
+  PROPOSED
+  RULED_OUT
+}
+
+enum WorkOrderStatus {
+  DRAFT
+  APPROVED
+  REJECTED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum VersionSource {
+  AI
+  TECHNICIAN
+}
+
+enum HistoryType {
+  REPORT_CREATED
+  THRESHOLDS_EVALUATED
+  ANALYSIS_RUN
+  ANALYSIS_FAILED
+  QUESTION_ANSWERED
+  OBSERVATION_ADDED
+  FINDING_CONFIRMED
+  WORK_ORDER_DRAFTED
+  WORK_ORDER_EDITED
+  WORK_ORDER_APPROVED
+  WORK_ORDER_REJECTED
+  REPORT_CLOSED
+}
+
+model ThresholdResult {
+  id            Int             @id @default(autoincrement())
+  reportId      Int
+  report        Report          @relation(fields: [reportId], references: [id])
+  sensor        String
+  status        ThresholdStatus
+  ruleId        String?
+  observedValue Float?
+  unit          String?
+  message       String
+  createdAt     DateTime        @default(now())
+
+  @@index([reportId])
+}
+
+model AnalysisRun {
+  id                Int                @id @default(autoincrement())
+  reportId          Int
+  report            Report             @relation(fields: [reportId], references: [id])
+  status            AnalysisStatus
+  retrievalMode     RetrievalMode
+  model             String?
+  retrievedChunkIds String[]
+  errorStage        String?
+  errorMessage      String?
+  latencyMs         Int?
+  rawOutput         Json?
+  validationNotes   Json?
+  createdAt         DateTime           @default(now())
+  hypotheses        Hypothesis[]
+  questions         FollowUpQuestion[]
+  steps             InspectionStep[]
+
+  @@index([reportId, createdAt])
+}
+
+model Hypothesis {
+  id         Int              @id @default(autoincrement())
+  reportId   Int
+  report     Report           @relation(fields: [reportId], references: [id])
+  runId      Int
+  run        AnalysisRun      @relation(fields: [runId], references: [id])
+  cause      String
+  rationale  String
+  confidence Confidence
+  citations  Json
+  status     HypothesisStatus @default(PROPOSED)
+  createdAt  DateTime         @default(now())
+  findings   Finding[]
+
+  @@index([reportId])
+}
+
+model FollowUpQuestion {
+  id         Int         @id @default(autoincrement())
+  reportId   Int
+  report     Report      @relation(fields: [reportId], references: [id])
+  runId      Int
+  run        AnalysisRun @relation(fields: [runId], references: [id])
+  question   String
+  citations  Json
+  answer     String?
+  answeredBy String?
+  answeredAt DateTime?
+  createdAt  DateTime    @default(now())
+
+  @@index([reportId])
+}
+
+model InspectionStep {
+  id          Int         @id @default(autoincrement())
+  reportId    Int
+  report      Report      @relation(fields: [reportId], references: [id])
+  runId       Int
+  run         AnalysisRun @relation(fields: [runId], references: [id])
+  position    Int
+  instruction String
+  citations   Json
+
+  createdAt DateTime @default(now())
+
+  @@index([reportId])
+}
+
+model Observation {
+  id         Int      @id @default(autoincrement())
+  reportId   Int
+  report     Report   @relation(fields: [reportId], references: [id])
+  text       String
+  recordedBy String
+  createdAt  DateTime @default(now())
+
+  @@index([reportId])
+}
+
+model Finding {
+  id           Int         @id @default(autoincrement())
+  reportId     Int
+  report       Report      @relation(fields: [reportId], references: [id])
+  hypothesisId Int?
+  hypothesis   Hypothesis? @relation(fields: [hypothesisId], references: [id], onDelete: Restrict)
+  description  String
+  confirmedBy  String
+  createdAt    DateTime    @default(now())
+
+  @@index([reportId])
+}
+
+model WorkOrder {
+  id             Int                @id @default(autoincrement())
+  reportId       Int                @unique
+  report         Report             @relation(fields: [reportId], references: [id])
+  status         WorkOrderStatus    @default(DRAFT)
+  decidedBy      String?
+  decidedAt      DateTime?
+  decidedVersion Int?
+  decisionNote   String?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  versions       WorkOrderVersion[]
+}
+
+model WorkOrderVersion {
+  id            Int           @id @default(autoincrement())
+  workOrderId   Int
+  workOrder     WorkOrder     @relation(fields: [workOrderId], references: [id])
+  versionNumber Int
+  title         String
+  description   String
+  priority      Priority
+  source        VersionSource
+  editedBy      String?
+  createdAt     DateTime      @default(now())
+
+  @@unique([workOrderId, versionNumber])
+}
+
+model HistoryEntry {
+  id          Int         @id @default(autoincrement())
+  equipmentId Int
+  equipment   Equipment   @relation(fields: [equipmentId], references: [id])
+  reportId    Int?
+  report      Report?     @relation(fields: [reportId], references: [id], onDelete: Restrict)
+  type        HistoryType
+  actor       String
+  summary     String
+  details     Json?
+  createdAt   DateTime    @default(now())
+
+  @@index([equipmentId, createdAt])
+}
