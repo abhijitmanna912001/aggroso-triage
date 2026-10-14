@@ -1,4 +1,5 @@
 @AGENTS.md
+@docs/DESIGN.md
 
 # Equipment Maintenance Triage Assistant
 
