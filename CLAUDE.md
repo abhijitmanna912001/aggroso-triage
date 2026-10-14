@@ -36,3 +36,6 @@ Take-home assessment build. The owner must be able to explain every decision. Pr
 
 ## Logging
 - Use the logger from lib/logger.ts for server-side logs. Never log connection strings, keys or passwords, and never put them in log messages.
+
+## Seeding
+- Run npm run seed:dry first, then npm run seed. The seed uses the paid OpenAI key and writes to the database, so only the owner runs it.
