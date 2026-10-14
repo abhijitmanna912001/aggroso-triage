@@ -4,8 +4,8 @@ import OpenAI from "openai";
 export const EMBEDDING_MODEL = "text-embedding-3-small";
 export const EMBEDDING_DIMENSIONS = 1536;
 
-const TIMEOUT_MS = 30_000;
-const MAX_RETRIES = 2;
+const DEFAULT_TIMEOUT_MS = 30_000;
+const DEFAULT_MAX_RETRIES = 2;
 
 export class EmbeddingError extends Error {
   readonly stage: string;
@@ -34,7 +34,10 @@ export function validateEmbeddings(vectors: number[][], expectedCount: number): 
   });
 }
 
-export async function embedTexts(texts: string[]): Promise<number[][]> {
+export async function embedTexts(
+  texts: string[],
+  options?: { timeoutMs?: number; maxRetries?: number },
+): Promise<number[][]> {
   if (texts.length === 0) return [];
 
   const apiKey = process.env.OPENAI_API_KEY;
@@ -42,7 +45,11 @@ export async function embedTexts(texts: string[]): Promise<number[][]> {
     throw new EmbeddingError("config", "OPENAI_API_KEY is not set");
   }
 
-  const client = new OpenAI({ apiKey, timeout: TIMEOUT_MS, maxRetries: MAX_RETRIES });
+  const client = new OpenAI({
+    apiKey,
+    timeout: options?.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+    maxRetries: options?.maxRetries ?? DEFAULT_MAX_RETRIES,
+  });
 
   let data: { index: number; embedding: number[] }[];
   try {

@@ -67,14 +67,25 @@ export function buildRetrievalQuery(input: RetrievalQueryInput): string {
   return truncateAtWord(parts.join("\n").trim(), MAX_QUERY_CHARS);
 }
 
-export function toTsQueryString(text: string, options: { maxTerms?: number } = {}): string {
+// Words that appear in nearly every chunk for the equipment type, so they add noise to a keyword query.
+export const GENERIC_QUERY_WORDS: Record<EquipmentType, readonly string[]> = {
+  PUMP: ["pump", "centrifugal"],
+  COMPRESSOR: ["compressor"],
+  MOTOR: ["motor", "electric"],
+};
+
+export function toTsQueryString(
+  text: string,
+  options: { maxTerms?: number; exclude?: readonly string[] } = {},
+): string {
   const maxTerms = options.maxTerms ?? 24;
+  const excluded = new Set((options.exclude ?? []).map((word) => word.toLowerCase()));
   const terms: string[] = [];
   const seen = new Set<string>();
 
   for (const token of text.toLowerCase().match(/[a-z0-9]+/g) ?? []) {
     if (terms.length >= maxTerms) break;
-    if (token.length < 3 || STOP_WORDS.has(token) || seen.has(token)) continue;
+    if (token.length < 3 || STOP_WORDS.has(token) || excluded.has(token) || seen.has(token)) continue;
     seen.add(token);
     terms.push(token);
   }

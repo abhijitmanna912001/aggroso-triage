@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildRetrievalQuery, toTsQueryString } from "../../lib/retrieval/query";
+import { GENERIC_QUERY_WORDS, buildRetrievalQuery, toTsQueryString } from "../../lib/retrieval/query";
 
 const SAFE = /^$|^[a-z0-9]+( \| [a-z0-9]+)*$/;
 
@@ -102,6 +102,28 @@ describe("toTsQueryString", () => {
     expect(toTsQueryString("")).toBe("");
     expect(toTsQueryString("  &|!:'()\\ -- ")).toBe("");
     expect(toTsQueryString("a an of")).toBe("");
+  });
+
+  it("drops excluded tokens, comparing lowercase", () => {
+    expect(toTsQueryString("Pump seal leak", { exclude: ["PUMP"] })).toBe("seal | leak");
+    expect(toTsQueryString("pump seal leak", { exclude: ["pump", "leak"] })).toBe("seal");
+  });
+
+  it("does not count excluded tokens toward maxTerms", () => {
+    expect(toTsQueryString("pump seal leak", { exclude: ["pump"], maxTerms: 2 })).toBe("seal | leak");
+  });
+
+  it("returns an empty string when everything is excluded", () => {
+    expect(toTsQueryString("pump pump", { exclude: ["pump"] })).toBe("");
+  });
+
+  it("drops the generic words for the equipment type from a built query", () => {
+    const query = buildRetrievalQuery(base);
+    const out = toTsQueryString(query, { exclude: GENERIC_QUERY_WORDS.PUMP });
+    expect(out).not.toMatch(/\bpump\b|\bcentrifugal\b/);
+    expect(out).toContain("grinding");
+    expect(GENERIC_QUERY_WORDS.COMPRESSOR).toEqual(["compressor"]);
+    expect(GENERIC_QUERY_WORDS.MOTOR).toEqual(["motor", "electric"]);
   });
 
   it("always matches the safe pattern", () => {
