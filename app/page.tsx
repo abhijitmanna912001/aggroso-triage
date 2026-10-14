@@ -1,12 +1,13 @@
 import { Suspense } from "react";
 import { prisma } from "@/lib/db";
+import { logger } from "@/lib/logger";
 
 async function DbStatus() {
   let count: number;
   try {
     count = await prisma.equipment.count();
   } catch (error) {
-    console.error("Database health check failed", error);
+    logger.error({ err: error }, "database health check failed");
     return <p role="alert">Database unreachable</p>;
   }
   return <p>Database connected. Equipment records: {count}</p>;
