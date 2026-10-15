@@ -1,15 +1,12 @@
-import Link from "next/link";
+import { LinkButton } from "@/app/_components/ui/button";
+import { EmptyState } from "@/app/_components/ui/empty-state";
 
 export default function NotFound() {
   return (
-    <div className="rounded-md border border-zinc-300 p-6 dark:border-zinc-700">
-      <h1 className="text-2xl font-semibold tracking-tight">Report not found</h1>
-      <p className="mt-2 text-sm">This report does not exist or the link is wrong.</p>
-      <p className="mt-4 text-sm">
-        <Link href="/" className="underline underline-offset-2 hover:no-underline">
-          Back to all reports
-        </Link>
-      </p>
-    </div>
+    <EmptyState
+      title="Report not found"
+      description="This report does not exist or the link is wrong."
+      action={<LinkButton href="/">Back to all reports</LinkButton>}
+    />
   );
 }

@@ -1,37 +1,30 @@
 import { WorkOrderStatusBadge } from "@/app/_components/status-badge";
+import { Alert } from "@/app/_components/ui/alert";
+import { Badge } from "@/app/_components/ui/badge";
+import { Card } from "@/app/_components/ui/card";
+import type { Tone } from "@/lib/ui/classes";
 import { formatUtc } from "@/lib/ui/format";
 import type { Workspace } from "./evidence-chips";
+import { SectionHeader } from "./report-header";
 import { ApprovePanel, EditWorkOrderForm, RejectPanel } from "./work-order-forms";
 
-const BASE = "inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-medium";
-
-const PRIORITY_LOOKS: Record<string, { glyph: string; classes: string }> = {
-  LOW: { glyph: "▁", classes: "border-zinc-500 text-zinc-800 dark:border-zinc-400 dark:text-zinc-200" },
-  MEDIUM: {
-    glyph: "▃",
-    classes: "border-blue-700 bg-blue-50 text-blue-900 dark:border-blue-400 dark:bg-blue-950 dark:text-blue-100",
-  },
-  HIGH: {
-    glyph: "▅",
-    classes: "border-amber-700 bg-amber-50 text-amber-900 dark:border-amber-400 dark:bg-amber-950 dark:text-amber-100",
-  },
-  URGENT: {
-    glyph: "▇",
-    classes: "border-red-700 bg-red-50 text-red-900 dark:border-red-400 dark:bg-red-950 dark:text-red-100",
-  },
+const PRIORITY_LOOKS: Record<string, { glyph: string; tone: Tone }> = {
+  LOW: { glyph: "▁", tone: "neutral" },
+  MEDIUM: { glyph: "▃", tone: "info" },
+  HIGH: { glyph: "▅", tone: "warning" },
+  URGENT: { glyph: "▇", tone: "danger" },
 };
 
-function PriorityBadge({ priority }: { priority: string }) {
+export function PriorityBadge({ priority }: { priority: string }) {
   const look = PRIORITY_LOOKS[priority] ?? PRIORITY_LOOKS.LOW;
   return (
-    <span className={`${BASE} ${look.classes}`}>
-      <span aria-hidden="true">{look.glyph}</span>
+    <Badge tone={look.tone} icon={<span aria-hidden="true">{look.glyph}</span>}>
       Priority: {priority}
-    </span>
+    </Badge>
   );
 }
 
-function author(version: { source: string; editedBy: string | null }): string {
+export function versionAuthor(version: { source: string; editedBy: string | null }): string {
   return version.source === "AI" ? "AI" : (version.editedBy ?? "a technician");
 }
 
@@ -45,35 +38,28 @@ export function WorkOrderSection({
   signedIn: boolean;
 }) {
   const latest = workOrder?.versions[0] ?? null;
-  const decided = workOrder !== null && (workOrder.status === "APPROVED" || workOrder.status === "REJECTED");
+  const approved = workOrder?.status === "APPROVED";
+  const decided = workOrder !== null && (approved || workOrder.status === "REJECTED");
 
   return (
-    <section id="work-order" aria-labelledby="work-order-heading" className="mt-10 scroll-mt-4">
-      <h2 id="work-order-heading" className="text-xl font-semibold">Work order</h2>
-      <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-        The AI can only draft. Only a technician can approve or reject.
-      </p>
+    <Card as="section" id="work-order" aria-labelledby="work-order-heading" className="scroll-mt-20">
+      <SectionHeader
+        id="work-order-heading"
+        title="Work order"
+        description="The AI can only draft. Only a technician can approve or reject."
+        count={workOrder?.versions.length}
+      />
 
       {workOrder === null || latest === null ? (
-        <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">No work order has been drafted yet.</p>
+        <p className="text-sm text-muted">No work order has been drafted yet.</p>
       ) : (
-        <div className="mt-3 space-y-4 text-sm">
-          <div className="rounded-md border border-zinc-300 p-4 dark:border-zinc-700">
-            <div className="flex flex-wrap items-center gap-2">
-              <WorkOrderStatusBadge status={workOrder.status} />
-              <PriorityBadge priority={latest.priority} />
-            </div>
-            <h3 className="mt-3 font-medium whitespace-pre-wrap">{latest.title}</h3>
-            <p className="mt-2 max-w-prose whitespace-pre-wrap">{latest.description}</p>
-            <p className="mt-3 text-zinc-600 dark:text-zinc-400">
-              Version {latest.versionNumber}, written by {author(latest)} · {formatUtc(latest.createdAt)}
-            </p>
-          </div>
-
+        <div className="space-y-4 text-sm">
           {decided ? (
-            <div className="rounded-md border border-zinc-500 p-4 dark:border-zinc-400">
-              <h3 className="font-medium">Decision</h3>
-              <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
+            <Alert
+              tone={approved ? "success" : "danger"}
+              title={approved ? "This work order was approved" : "This work order was rejected"}
+            >
+              <dl className="mt-1 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
                 <dt className="font-medium">Decided by</dt>
                 <dd>{workOrder.decidedBy ?? "unknown"}</dd>
                 <dt className="font-medium">Decided at</dt>
@@ -83,12 +69,30 @@ export function WorkOrderSection({
                 <dt className="font-medium">Note</dt>
                 <dd className="whitespace-pre-wrap">{workOrder.decisionNote ?? "No note"}</dd>
               </dl>
-            </div>
+              <p className="mt-2">This work order has been decided and can no longer be edited.</p>
+            </Alert>
           ) : null}
 
-          {decided ? (
-            <p>This work order has been decided and can no longer be edited.</p>
-          ) : (
+          <div className="rounded-md border border-line p-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <WorkOrderStatusBadge status={workOrder.status} />
+              <PriorityBadge priority={latest.priority} />
+            </div>
+            <h3 className="mt-3 whitespace-pre-wrap">{latest.title}</h3>
+            <p className="mt-1 text-muted">
+              Version {latest.versionNumber}, written by {versionAuthor(latest)} · {formatUtc(latest.createdAt)}
+            </p>
+            <div
+              role="region"
+              aria-label="Work order description"
+              tabIndex={0}
+              className="mt-3 max-h-72 overflow-y-auto rounded-md border border-line bg-surface p-3 whitespace-pre-wrap focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              {latest.description}
+            </div>
+          </div>
+
+          {decided ? null : (
             <div className="space-y-4">
               <EditWorkOrderForm
                 key={latest.versionNumber}
@@ -97,23 +101,25 @@ export function WorkOrderSection({
                 expectedVersion={latest.versionNumber}
                 initial={{ title: latest.title, description: latest.description, priority: latest.priority }}
               />
-              <ApprovePanel reportId={reportId} signedIn={signedIn} expectedVersion={latest.versionNumber} />
-              <RejectPanel reportId={reportId} signedIn={signedIn} expectedVersion={latest.versionNumber} />
+              <div className="grid gap-4 md:grid-cols-2 md:items-start">
+                <ApprovePanel reportId={reportId} signedIn={signedIn} expectedVersion={latest.versionNumber} />
+                <RejectPanel reportId={reportId} signedIn={signedIn} expectedVersion={latest.versionNumber} />
+              </div>
             </div>
           )}
 
-          <details className="rounded-md border border-zinc-300 p-4 dark:border-zinc-700">
-            <summary className="cursor-pointer font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
+          <details className="rounded-md border border-line p-4">
+            <summary className="cursor-pointer rounded-xs font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
               Version history ({workOrder.versions.length})
             </summary>
             <ol className="mt-3 space-y-3">
               {workOrder.versions.map((v) => (
-                <li key={v.versionNumber} className="border-t border-zinc-200 pt-3 dark:border-zinc-800">
+                <li key={v.versionNumber} className="border-t border-line pt-3">
                   <p className="font-medium">
                     Version {v.versionNumber} · {v.source === "AI" ? "AI" : "Technician"}
                     {v.editedBy ? ` (${v.editedBy})` : ""}
                   </p>
-                  <p className="text-zinc-600 dark:text-zinc-400">{formatUtc(v.createdAt)}</p>
+                  <p className="text-muted">{formatUtc(v.createdAt)}</p>
                   <p className="mt-1">
                     <PriorityBadge priority={v.priority} />
                   </p>
@@ -125,6 +131,6 @@ export function WorkOrderSection({
           </details>
         </div>
       )}
-    </section>
+    </Card>
   );
 }

@@ -66,7 +66,7 @@ export function FindingForm({
           </select>
           <FieldErrors id="finding-cause-errors" errors={causeErrors} />
         </div>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">A finding is confirmed by you, not by the AI.</p>
+        <p className="text-sm text-muted">A finding is confirmed by you, not by the AI.</p>
         {signedIn ? null : <SignInNotice id="finding-signin" />}
         <SubmitButton label="Confirm finding" pendingLabel="Confirming..." />
       </fieldset>

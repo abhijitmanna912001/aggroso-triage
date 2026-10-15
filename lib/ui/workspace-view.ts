@@ -1,6 +1,18 @@
 // Pure module: no "server-only", no "@/" alias, no I/O. View helpers for the report workspace page. Everything here
 // returns fixed text or parses stored JSON defensively, so a malformed row can never break the page.
 
+// The single source for the section anchors on the report page: the ids the sections render and the labels the
+// section nav shows. Order is the page order.
+export const WORKSPACE_SECTIONS: readonly { id: string; label: string }[] = [
+  { id: "observations", label: "Observations" },
+  { id: "analysis", label: "Analysis" },
+  { id: "causes", label: "Possible causes" },
+  { id: "findings", label: "Confirmed findings" },
+  { id: "questions", label: "Follow-up questions" },
+  { id: "steps", label: "Inspection steps" },
+  { id: "work-order", label: "Work order" },
+];
+
 export type RunNotes = {
   dropped: { kind: string; index: number; reason: string }[];
   notes: string[];

@@ -3,10 +3,11 @@
 import { useActionState } from "react";
 import { useRouter } from "next/navigation";
 import { FieldErrors, FormError } from "@/app/_components/form-messages";
+import { Button } from "@/app/_components/ui/button";
 import type { ActionResult } from "@/lib/server/action-result";
+import { controlClasses } from "@/lib/ui/classes";
 
-export const INPUT_CLASSES =
-  "mt-1 block w-full rounded-md border border-zinc-400 bg-white px-3 py-2 text-sm text-zinc-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-60 aria-[invalid=true]:border-red-600 dark:border-zinc-500 dark:bg-zinc-900 dark:text-zinc-100 dark:aria-[invalid=true]:border-red-400";
+export const INPUT_CLASSES = `mt-1 ${controlClasses}`;
 
 export const SIGN_IN_REASON = "Choose your name in the header to make changes";
 
@@ -34,7 +35,7 @@ export function fieldErrorsOf(state: ActionResult | null, name: string): string[
 
 export function SignInNotice({ id }: { id: string }) {
   return (
-    <p id={id} className="text-sm font-medium">
+    <p id={id} className="text-sm font-medium text-warning">
       <span aria-hidden="true">▲ </span>
       {SIGN_IN_REASON}
     </p>
@@ -64,13 +65,9 @@ export function FormFooter({
       </div>
       {failure?.formError ? <FormError message={failure.formError} /> : null}
       {failure?.formError && showReload ? (
-        <button
-          type="button"
-          onClick={onReload}
-          className="rounded-md border border-zinc-500 px-3 py-1.5 text-sm font-medium hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:hover:bg-zinc-800"
-        >
+        <Button variant="secondary" size="sm" onClick={onReload}>
           Reload the page
-        </button>
+        </Button>
       ) : null}
     </div>
   );
@@ -126,7 +123,7 @@ export function TextField({
       ) : (
         <input {...shared} type="text" onChange={(e) => onChange(e.target.value)} />
       )}
-      <p id={counterId} className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+      <p id={counterId} className="mt-1 text-sm text-muted">
         {value.length} / {max} characters
       </p>
       <FieldErrors id={errorsId} errors={errors} />

@@ -1,6 +1,8 @@
+import { Card } from "@/app/_components/ui/card";
 import { formatUtc } from "@/lib/ui/format";
 import { AnswerForm } from "./answer-form";
 import { EvidenceChips, buildSources, type Workspace } from "./evidence-chips";
+import { SectionHeader } from "./report-header";
 
 export function QuestionsSection({
   questions,
@@ -15,26 +17,31 @@ export function QuestionsSection({
 }) {
   const sources = buildSources(ws);
   return (
-    <section id="questions" aria-labelledby="questions-heading" className="mt-10 scroll-mt-4">
-      <h2 id="questions-heading" className="text-xl font-semibold">Follow-up questions</h2>
+    <Card as="section" id="questions" aria-labelledby="questions-heading" className="scroll-mt-20">
+      <SectionHeader
+        id="questions-heading"
+        title="Follow-up questions"
+        description="Questions the AI suggests asking on site."
+        count={questions.length}
+      />
       {questions.length === 0 ? (
-        <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">No follow-up questions were proposed.</p>
+        <p className="text-sm text-muted">No follow-up questions were proposed.</p>
       ) : (
-        <ul className="mt-3 space-y-3">
+        <ul className="space-y-3">
           {questions.map((q) => (
-            <li key={q.id} className="rounded-md border border-zinc-300 p-4 text-sm dark:border-zinc-700">
+            <li key={q.id} className="rounded-md border border-line p-4 text-sm">
               <p className="font-medium whitespace-pre-wrap">{q.question}</p>
               <EvidenceChips citations={q.citations} sources={sources} />
               {q.answer !== null ? (
                 <div className="mt-3">
                   <p className="whitespace-pre-wrap">{q.answer}</p>
-                  <p className="mt-1 text-zinc-600 dark:text-zinc-400">
+                  <p className="mt-1 text-muted">
                     Answered by {q.answeredBy ?? "unknown"} · {formatUtc(q.answeredAt)}
                   </p>
                 </div>
               ) : (
                 <div className="mt-3">
-                  <p className="text-zinc-600 dark:text-zinc-400">Awaiting an answer</p>
+                  <p className="text-muted">Awaiting an answer</p>
                   <AnswerForm reportId={reportId} questionId={q.id} signedIn={signedIn} />
                 </div>
               )}
@@ -42,6 +49,6 @@ export function QuestionsSection({
           ))}
         </ul>
       )}
-    </section>
+    </Card>
   );
 }

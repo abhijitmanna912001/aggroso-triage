@@ -4,6 +4,7 @@ import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { analyzeReportAction } from "@/app/actions";
 import { FormError } from "@/app/_components/form-messages";
+import { Button } from "@/app/_components/ui/button";
 import type { ActionResult } from "@/lib/server/action-result";
 
 export function AnalyzeButton({
@@ -29,13 +30,9 @@ export function AnalyzeButton({
   return (
     <form action={formAction} className="space-y-2">
       <input type="hidden" name="reportId" value={reportId} />
-      <button
-        type="submit"
-        disabled={pending || !signedIn}
-        className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
-      >
+      <Button type="submit" disabled={pending || !signedIn}>
         {hasRun ? "Run analysis again" : "Run analysis"}
-      </button>
+      </Button>
       {!signedIn ? <p className="text-sm">Choose your name in the header first</p> : null}
       <div aria-live="polite" className="text-sm">
         {pending ? "Analyzing... this can take up to a minute. Keep this page open." : null}

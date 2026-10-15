@@ -1,6 +1,8 @@
+import { Card } from "@/app/_components/ui/card";
 import { formatUtc } from "@/lib/ui/format";
 import type { Workspace } from "./evidence-chips";
 import { FindingForm } from "./finding-form";
+import { SectionHeader } from "./report-header";
 
 export function FindingsSection({
   findings,
@@ -15,21 +17,23 @@ export function FindingsSection({
 }) {
   const causes = new Map(hypotheses.map((h) => [h.id, h.cause] as const));
   return (
-    <section id="findings" aria-labelledby="findings-heading" className="mt-10 scroll-mt-4">
-      <h2 id="findings-heading" className="text-xl font-semibold">Confirmed findings</h2>
-      <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Entered by a named technician.</p>
+    <Card as="section" id="findings" aria-labelledby="findings-heading" className="scroll-mt-20">
+      <SectionHeader
+        id="findings-heading"
+        title="Confirmed findings"
+        description="Entered by a named technician."
+        count={findings.length}
+      />
       {findings.length === 0 ? (
-        <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
-          No findings confirmed yet. Only a technician can confirm a finding.
-        </p>
+        <p className="text-sm text-muted">No findings confirmed yet. Only a technician can confirm a finding.</p>
       ) : (
-        <ul className="mt-3 space-y-3">
+        <ul className="space-y-3">
           {findings.map((f) => {
             const cause = f.hypothesisId === null ? undefined : causes.get(f.hypothesisId);
             return (
-              <li key={f.id} className="rounded-md border border-zinc-300 p-4 text-sm dark:border-zinc-700">
+              <li key={f.id} className="rounded-md border border-line p-4 text-sm">
                 <p className="whitespace-pre-wrap">{f.description}</p>
-                <p className="mt-1 text-zinc-600 dark:text-zinc-400">
+                <p className="mt-1 text-muted">
                   Confirmed by {f.confirmedBy} · {formatUtc(f.createdAt)}
                 </p>
                 {cause ? (
@@ -48,6 +52,6 @@ export function FindingsSection({
         signedIn={signedIn}
         hypotheses={hypotheses.map((h) => ({ id: h.id, cause: h.cause }))}
       />
-    </section>
+    </Card>
   );
 }

@@ -130,7 +130,7 @@ export function ReportForm({ equipment, rules }: { equipment: FormEquipment[]; r
 
   return (
     <form action={formAction} className="space-y-6" noValidate>
-      <Card as="section">
+      <Card as="section" aria-labelledby="section-sample">
         <SectionHeading
           id="section-sample"
           title="Start from a sample"
@@ -159,7 +159,7 @@ export function ReportForm({ equipment, rules }: { equipment: FormEquipment[]; r
         {sampleNote ? <p className="mt-1 text-sm">{sampleNote}</p> : null}
       </Card>
 
-      <Card as="section">
+      <Card as="section" aria-labelledby="section-equipment">
         <SectionHeading
           id="section-equipment"
           title="Equipment and issue"
@@ -210,7 +210,7 @@ export function ReportForm({ equipment, rules }: { equipment: FormEquipment[]; r
         </div>
       </Card>
 
-      <Card as="section">
+      <Card as="section" aria-labelledby="section-events">
         <SectionHeading
           id="section-events"
           title="Recent events"
@@ -280,7 +280,7 @@ export function ReportForm({ equipment, rules }: { equipment: FormEquipment[]; r
         </div>
       </Card>
 
-      <Card as="section">
+      <Card as="section" aria-labelledby="section-readings">
         <SectionHeading
           id="section-readings"
           title="Sensor readings"

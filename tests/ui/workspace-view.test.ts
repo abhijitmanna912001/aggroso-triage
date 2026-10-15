@@ -6,6 +6,7 @@ import {
   parseRunNotes,
   sortThresholds,
   thresholdHint,
+  WORKSPACE_SECTIONS,
 } from "@/lib/ui/workspace-view";
 
 const EMPTY = {
@@ -156,6 +157,33 @@ describe("sortThresholds", () => {
     const sorted = sortThresholds(items);
     expect(sorted).not.toBe(items);
     expect(items).toEqual(copy);
+  });
+});
+
+describe("WORKSPACE_SECTIONS", () => {
+  it("lists the seven sections in page order", () => {
+    expect(WORKSPACE_SECTIONS.map((s) => s.id)).toEqual([
+      "observations",
+      "analysis",
+      "causes",
+      "findings",
+      "questions",
+      "steps",
+      "work-order",
+    ]);
+    expect(WORKSPACE_SECTIONS.map((s) => s.label)).toEqual([
+      "Observations",
+      "Analysis",
+      "Possible causes",
+      "Confirmed findings",
+      "Follow-up questions",
+      "Inspection steps",
+      "Work order",
+    ]);
+  });
+
+  it("has unique ids", () => {
+    expect(new Set(WORKSPACE_SECTIONS.map((s) => s.id)).size).toBe(WORKSPACE_SECTIONS.length);
   });
 });
 

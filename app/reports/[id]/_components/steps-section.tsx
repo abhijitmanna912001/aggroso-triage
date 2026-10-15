@@ -1,4 +1,6 @@
+import { Card } from "@/app/_components/ui/card";
 import { EvidenceChips, buildSources, type Workspace } from "./evidence-chips";
+import { SectionHeader } from "./report-header";
 
 export function StepsSection({
   steps,
@@ -9,20 +11,33 @@ export function StepsSection({
 }) {
   const sources = buildSources(ws);
   return (
-    <section id="steps" aria-labelledby="steps-heading" className="mt-10 scroll-mt-4">
-      <h2 id="steps-heading" className="text-xl font-semibold">Inspection steps</h2>
+    <Card as="section" id="steps" aria-labelledby="steps-heading" className="scroll-mt-20">
+      <SectionHeader
+        id="steps-heading"
+        title="Inspection steps"
+        description="Checks the AI suggests, in order."
+        count={steps.length}
+      />
       {steps.length === 0 ? (
-        <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">No inspection steps were proposed.</p>
+        <p className="text-sm text-muted">No inspection steps were proposed.</p>
       ) : (
-        <ol className="mt-3 list-decimal space-y-3 pl-6 text-sm">
-          {steps.map((s) => (
-            <li key={s.id}>
-              <p className="whitespace-pre-wrap">{s.instruction}</p>
-              <EvidenceChips citations={s.citations} sources={sources} />
+        <ol className="space-y-3 text-sm">
+          {steps.map((s, i) => (
+            <li key={s.id} className="flex items-start gap-3">
+              <span
+                aria-hidden="true"
+                className="flex size-7 shrink-0 items-center justify-center rounded-full border border-line bg-surface text-xs font-semibold"
+              >
+                {i + 1}
+              </span>
+              <div className="min-w-0 grow">
+                <p className="whitespace-pre-wrap">{s.instruction}</p>
+                <EvidenceChips citations={s.citations} sources={sources} />
+              </div>
             </li>
           ))}
         </ol>
       )}
-    </section>
+    </Card>
   );
 }

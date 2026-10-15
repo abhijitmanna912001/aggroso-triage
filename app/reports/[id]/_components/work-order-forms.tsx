@@ -9,9 +9,8 @@ import { FormFooter, INPUT_CLASSES, SignInNotice, TextField, fieldErrorsOf, useA
 
 const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 
-const PANEL = "rounded-md border border-zinc-300 p-4 dark:border-zinc-700";
-const SUMMARY =
-  "cursor-pointer font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600";
+const PANEL = "rounded-md border border-line bg-surface-raised p-4";
+const SUMMARY = "cursor-pointer rounded-xs font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
 // Remount with key={versionNumber} so the defaults reset when a new version arrives.
 export function EditWorkOrderForm({
@@ -80,7 +79,7 @@ export function EditWorkOrderForm({
           </select>
           <FieldErrors id="wo-priority-errors" errors={priorityErrors} />
         </div>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="text-sm text-muted">
           Saving creates a new version written by you. The AI&apos;s earlier versions are kept.
         </p>
         {signedIn ? null : <SignInNotice id="wo-edit-signin" />}

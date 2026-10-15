@@ -1,14 +1,18 @@
-import type { ReactNode } from "react";
+import type { HTMLAttributes } from "react";
 import { cardClasses } from "@/lib/ui/classes";
 
+// Forwards the standard attributes (id, aria-labelledby, aria-label, ...) to the element.
 export function Card({
   as: Tag = "div",
   className,
   children,
+  ...rest
 }: {
   as?: "div" | "section" | "article";
-  className?: string;
-  children: ReactNode;
-}) {
-  return <Tag className={`${cardClasses} ${className ?? ""}`.trim()}>{children}</Tag>;
+} & HTMLAttributes<HTMLElement>) {
+  return (
+    <Tag className={`${cardClasses} ${className ?? ""}`.trim()} {...rest}>
+      {children}
+    </Tag>
+  );
 }

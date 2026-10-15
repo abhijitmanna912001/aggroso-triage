@@ -17,6 +17,7 @@ Take-home assessment build. The owner must be able to explain every decision. Pr
 - Do not run `npm audit fix --force`. Do not change pinned versions. Ask before adding any dependency.
 - Do not edit existing migration files. Schema changes go through `npx prisma migrate dev --name <name>`.
 - Do not run git commit or git push. The owner commits.
+- Create and change files only with the Write and Edit tools. Never write or modify a file through a shell command, heredoc or script.
 
 ## Product invariants (each needs a test)
 - AI code can only create DRAFT work orders. Only the approve and reject server actions may set APPROVED or REJECTED, and each requires a technician name.
