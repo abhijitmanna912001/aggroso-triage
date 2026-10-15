@@ -69,6 +69,9 @@ describe("buildAnalysisPrompt", () => {
     expect(instructions).toContain("never claim that a cause is confirmed");
     expect(instructions).toContain("Phrase every cause as a possibility");
     expect(instructions).toContain("exact type and id");
+    expect(instructions).toContain("Every possible cause and every inspection step must cite at least one manual section or event");
+    expect(instructions).toContain("Threshold results may be cited as additional evidence");
+    expect(instructions).toContain("Follow-up questions may cite threshold results alone");
     expect(instructions).toContain("Do not invent manual content, limits, part numbers or procedures");
     expect(instructions).toContain("isolate and lock out");
     expect(instructions).toContain("Never describe remote control of equipment");

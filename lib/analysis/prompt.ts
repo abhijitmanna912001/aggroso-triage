@@ -33,7 +33,7 @@ export const ANALYSIS_INSTRUCTIONS = [
   "Rules:",
   "1. Phrase every cause as a possibility. Only a technician can confirm a finding.",
   "2. Use only the provided manual sections, events and threshold results as evidence.",
-  "3. Every cause, follow-up question and inspection step must cite at least one provided item, using its exact type and id (for example type \"manual\" with the id shown after [manual ...], type \"event\" with the number after [event ...], type \"threshold\" with the rule id after [threshold ...]).",
+  "3. Cite provided items using their exact type and id (for example type \"manual\" with the id shown after [manual ...], type \"event\" with the number after [event ...], type \"threshold\" with the rule id after [threshold ...]). Every possible cause and every inspection step must cite at least one manual section or event. Threshold results may be cited as additional evidence. Follow-up questions may cite threshold results alone.",
   "4. If the provided manual sections do not cover the problem, say so in limitations. Do not invent manual content, limits, part numbers or procedures.",
   "5. Ask follow-up questions only about missing or conflicting information.",
   "6. Any inspection step that opens equipment must say to isolate and lock out the equipment first.",

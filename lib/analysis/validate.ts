@@ -55,6 +55,7 @@ export function validateAnalysis(
     kind: DroppedItem["kind"],
     textOf: (item: T) => string,
     rebuild: (item: T, citations: Citation[]) => T,
+    requireEvidence: boolean,
   ): T[] {
     const accepted: T[] = [];
     items.forEach((item, index) => {
@@ -68,6 +69,11 @@ export function validateAnalysis(
       if (removed > 0) notes.push(`${label}: removed ${removed} invalid or duplicate citation(s)`);
       if (citations.length === 0) {
         dropped.push({ kind, index, reason: "no valid citation" });
+        return;
+      }
+      // Threshold results alone are not evidence for a cause or a step; they may only support a question.
+      if (requireEvidence && !citations.some((c) => c.type === "manual" || c.type === "event")) {
+        dropped.push({ kind, index, reason: "needs manual or event evidence" });
         return;
       }
       accepted.push(rebuild(item, citations));
@@ -92,6 +98,7 @@ export function validateAnalysis(
         confidence: h.confidence,
         citations,
       }),
+      true,
     ),
     ANALYSIS_LIMITS.hypotheses,
     "hypotheses",
@@ -103,6 +110,7 @@ export function validateAnalysis(
       "question",
       (q) => q.question,
       (q, citations) => ({ question: q.question.trim(), citations }),
+      false,
     ),
     ANALYSIS_LIMITS.followUpQuestions,
     "follow-up questions",
@@ -114,6 +122,7 @@ export function validateAnalysis(
       "step",
       (s) => s.instruction,
       (s, citations) => ({ instruction: s.instruction.trim(), citations }),
+      true,
     ),
     ANALYSIS_LIMITS.inspectionSteps,
     "inspection steps",

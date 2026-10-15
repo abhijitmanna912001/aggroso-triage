@@ -11,6 +11,7 @@ const allowed: AllowedCitations = {
 
 const manual = { type: "manual", id: "pump-4-2" } as const;
 const event = { type: "event", id: "1" } as const;
+const threshold = { type: "threshold", id: "PUMP.vibration" } as const;
 
 function makeOutput(overrides: Partial<AnalysisOutput> = {}): AnalysisOutput {
   return {
@@ -89,6 +90,45 @@ describe("validateAnalysis citations", () => {
     const result = validateAnalysis(output, allowed, none);
     expect(result.accepted.followUpQuestions[0].citations).toEqual([event]);
     expect(result.notes).toEqual(["question 1: removed 2 invalid or duplicate citation(s)"]);
+  });
+
+  it("drops a threshold-only hypothesis", () => {
+    const output = makeOutput({
+      hypotheses: [{ cause: "X", rationale: "r", confidence: "LOW", citations: [threshold] }],
+    });
+    const result = validateAnalysis(output, allowed, none);
+    expect(result.accepted.hypotheses).toEqual([]);
+    expect(result.dropped).toEqual([{ kind: "hypothesis", index: 0, reason: "needs manual or event evidence" }]);
+  });
+
+  it("drops a threshold-only inspection step", () => {
+    const output = makeOutput({
+      inspectionSteps: [{ instruction: "Look", citations: [threshold] }],
+    });
+    const result = validateAnalysis(output, allowed, none);
+    expect(result.accepted.inspectionSteps).toEqual([]);
+    expect(result.dropped).toEqual([{ kind: "step", index: 0, reason: "needs manual or event evidence" }]);
+  });
+
+  it("keeps a threshold-only follow-up question", () => {
+    const output = makeOutput({
+      followUpQuestions: [{ question: "Is the sensor connected?", citations: [threshold] }],
+    });
+    const result = validateAnalysis(output, allowed, none);
+    expect(result.accepted.followUpQuestions).toHaveLength(1);
+    expect(result.dropped).toEqual([]);
+  });
+
+  it("keeps a hypothesis that cites a threshold plus a manual or event", () => {
+    const output = makeOutput({
+      hypotheses: [
+        { cause: "A", rationale: "r", confidence: "LOW", citations: [threshold, manual] },
+        { cause: "B", rationale: "r", confidence: "LOW", citations: [threshold, event] },
+      ],
+    });
+    const result = validateAnalysis(output, allowed, none);
+    expect(result.accepted.hypotheses).toHaveLength(2);
+    expect(result.dropped).toEqual([]);
   });
 
   it("keeps the original index when an earlier item is dropped", () => {
