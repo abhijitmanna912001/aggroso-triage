@@ -44,6 +44,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                 <Link href="/" className="underline-offset-4 hover:underline">
                   Reports
                 </Link>
+                <Link href="/equipment" className="underline-offset-4 hover:underline">
+                  Equipment
+                </Link>
                 <Link href="/reports/new" className="underline-offset-4 hover:underline">
                   New report
                 </Link>

@@ -11,6 +11,67 @@ export async function listEquipment() {
   });
 }
 
+// Two queries: counts and latest report per equipment, then open reports grouped by equipment
+// (a relation can be selected only once in _count, so the open count needs its own query).
+export async function listEquipmentOverview() {
+  const [rows, openGroups] = await Promise.all([
+    prisma.equipment.findMany({
+      select: {
+        id: true,
+        tag: true,
+        name: true,
+        type: true,
+        _count: { select: { reports: true } },
+        reports: {
+          select: { createdAt: true },
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+          take: 1,
+        },
+      },
+      orderBy: { tag: "asc" },
+    }),
+    prisma.report.groupBy({
+      by: ["equipmentId"],
+      where: { status: "OPEN" },
+      _count: { _all: true },
+    }),
+  ]);
+  const openByEquipment = new Map(openGroups.map((g) => [g.equipmentId, g._count._all] as const));
+  return rows.map((e) => ({
+    id: e.id,
+    tag: e.tag,
+    name: e.name,
+    type: e.type,
+    reportCount: e._count.reports,
+    openReportCount: openByEquipment.get(e.id) ?? 0,
+    latestReportAt: e.reports[0]?.createdAt ?? null,
+  }));
+}
+
+export async function getEquipmentReports(equipmentId: number, limit = 50) {
+  const rows = await prisma.report.findMany({
+    where: { equipmentId },
+    select: {
+      id: true,
+      createdAt: true,
+      reportedBy: true,
+      issue: true,
+      status: true,
+      workOrder: { select: { status: true } },
+    },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: limit,
+  });
+  return rows.map((r) => ({
+    id: r.id,
+    createdAt: r.createdAt,
+    reportedBy: r.reportedBy,
+    issue: r.issue.slice(0, 140),
+    status: r.status,
+    workOrderStatus: r.workOrder?.status ?? null,
+  }));
+}
+
 export async function listRecentReports(limit = 20) {
   const rows = await prisma.report.findMany({
     select: {

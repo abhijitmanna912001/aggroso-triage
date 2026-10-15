@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ReportStatusBadge } from "@/app/_components/status-badge";
 import { formatUtc } from "@/lib/ui/format";
 import type { Workspace } from "./evidence-chips";
@@ -10,7 +11,10 @@ export function ReportHeader({ report }: { report: Workspace["report"] }) {
         <ReportStatusBadge status={report.status} />
       </div>
       <p className="mt-2 text-sm">
-        <span className="font-medium">{report.equipment.tag}</span> · {report.equipment.name} · {report.equipment.type}
+        <Link href={`/equipment/${report.equipment.id}`} className="font-medium underline underline-offset-2 hover:no-underline">
+          {report.equipment.tag}
+        </Link>{" "}
+        ·{report.equipment.name} · {report.equipment.type}
       </p>
       <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
         Reported by {report.reportedBy} on {formatUtc(report.createdAt)}
