@@ -1,26 +1,24 @@
+import { Alert } from "./ui/alert";
+import { X } from "./ui/icons";
+
 // Server messages are fixed text (see lib/server/action-result.ts), so they are safe to show as they are.
 export function FormError({ id, message }: { id?: string; message: string | null | undefined }) {
   if (!message) return null;
   return (
-    <p
-      id={id}
-      role="alert"
-      className="rounded-md border border-red-600 bg-red-50 px-3 py-2 text-sm text-red-900 dark:border-red-400 dark:bg-red-950 dark:text-red-100"
-    >
-      <span aria-hidden="true">✕ </span>
+    <Alert id={id} tone="danger">
       {message}
-    </p>
+    </Alert>
   );
 }
 
 export function FieldErrors({ id, errors }: { id: string; errors: string[] | undefined }) {
   if (!errors || errors.length === 0) return null;
   return (
-    <ul id={id} className="mt-1 space-y-0.5 text-sm text-red-700 dark:text-red-300">
+    <ul id={id} className="mt-1 space-y-0.5 text-sm text-danger">
       {errors.map((message) => (
-        <li key={message}>
-          <span aria-hidden="true">✕ </span>
-          {message}
+        <li key={message} className="flex items-start gap-1">
+          <X className="mt-0.5" />
+          <span>{message}</span>
         </li>
       ))}
     </ul>

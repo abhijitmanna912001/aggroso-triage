@@ -1,13 +1,41 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #f6f7f9;
   --foreground: #171717;
+  --surface: #f6f7f9;
+  --surface-raised: #ffffff;
+  --line: #d4d4d8;
+  --muted: #52525b;
+  --accent: #1d4ed8;
+  --accent-fg: #ffffff;
+  --danger: #b91c1c;
+  --danger-soft: #fef2f2;
+  --warning: #92400e;
+  --warning-soft: #fffbeb;
+  --success: #166534;
+  --success-soft: #f0fdf4;
+  --info: #1d4ed8;
+  --info-soft: #eff6ff;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-line: var(--line);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -16,6 +44,20 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --surface: #0a0a0a;
+    --surface-raised: #171717;
+    --line: #3f3f46;
+    --muted: #a1a1aa;
+    --accent: #60a5fa;
+    --accent-fg: #0a0a0a;
+    --danger: #fca5a5;
+    --danger-soft: #450a0a;
+    --warning: #fcd34d;
+    --warning-soft: #451a03;
+    --success: #86efac;
+    --success-soft: #052e16;
+    --info: #93c5fd;
+    --info-soft: #172554;
   }
 }
 
@@ -26,6 +68,44 @@ body {
 }
 
 @layer base {
+  html {
+    scroll-padding-top: 5rem;
+    scroll-behavior: smooth;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  h1 {
+    @apply text-2xl font-semibold tracking-tight sm:text-3xl;
+  }
+
+  h2 {
+    @apply text-xl font-semibold tracking-tight;
+  }
+
+  h3 {
+    @apply text-base font-semibold;
+  }
+
+  h4 {
+    @apply text-sm font-semibold uppercase tracking-wide text-muted;
+  }
+
+  table th {
+    @apply text-left text-xs font-medium uppercase tracking-wide text-muted;
+  }
+
+  caption {
+    @apply py-2 text-left text-sm text-muted;
+  }
+
+  ::placeholder {
+    color: color-mix(in srgb, var(--muted) 70%, transparent);
+  }
+
   button:not(:disabled),
   [role="button"]:not(:disabled),
   summary {
@@ -34,5 +114,19 @@ body {
 
   button:disabled {
     cursor: not-allowed;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }

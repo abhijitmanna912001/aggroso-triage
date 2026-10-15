@@ -7,6 +7,8 @@ import { TECHNICIANS } from "@/lib/technicians";
 import type { ActionResult } from "@/lib/server/action-result";
 import { FieldErrors, FormError } from "./form-messages";
 import { SubmitButton } from "./submit-button";
+import { Button } from "./ui/button";
+import { Select } from "./ui/field";
 
 const SELECT_ID = "technician-name";
 const ERROR_ID = "technician-name-error";
@@ -33,13 +35,9 @@ export function TechnicianSelect({ current }: { current: string | null }) {
         <span>
           Signed in as <strong>{current}</strong>
         </span>
-        <button
-          type="button"
-          onClick={() => setSwitchingFrom(current)}
-          className="rounded-md border border-zinc-400 px-2 py-1 hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:hover:bg-zinc-800"
-        >
+        <Button type="button" variant="secondary" size="sm" onClick={() => setSwitchingFrom(current)}>
           Switch
-        </button>
+        </Button>
       </div>
     );
   }
@@ -51,14 +49,14 @@ export function TechnicianSelect({ current }: { current: string | null }) {
         <label htmlFor={SELECT_ID} className="mr-2">
           Your name
         </label>
-        <select
+        <Select
           id={SELECT_ID}
           name="name"
           defaultValue={current ?? ""}
           required
           aria-invalid={nameErrors ? true : undefined}
           aria-describedby={nameErrors ? ERROR_ID : undefined}
-          className="rounded-md border border-zinc-400 bg-transparent px-2 py-1 dark:bg-zinc-900"
+          className="w-auto!"
         >
           <option value="" disabled>
             Choose…
@@ -68,19 +66,15 @@ export function TechnicianSelect({ current }: { current: string | null }) {
               {name}
             </option>
           ))}
-        </select>
+        </Select>
         <FieldErrors id={ERROR_ID} errors={nameErrors} />
         {state && !state.ok ? <FormError message={state.formError} /> : null}
       </div>
       <SubmitButton label={current === null ? "Continue" : "Switch"} pendingLabel="Saving…" />
       {current !== null ? (
-        <button
-          type="button"
-          onClick={() => setSwitchingFrom(null)}
-          className="rounded-md border border-zinc-400 px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-        >
+        <Button type="button" variant="secondary" size="md" onClick={() => setSwitchingFrom(null)}>
           Cancel
-        </button>
+        </Button>
       ) : null}
     </form>
   );
