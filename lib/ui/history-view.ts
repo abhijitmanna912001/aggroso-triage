@@ -33,6 +33,26 @@ export const GROUP_LABELS: Record<HistoryGroup, string> = {
   other: "Other",
 };
 
+export type HistoryTone = "neutral" | "info" | "success" | "warning" | "danger";
+
+const GROUP_TONES: Record<HistoryGroup, HistoryTone> = {
+  report: "info",
+  analysis: "neutral",
+  decision: "success",
+  note: "neutral",
+  other: "neutral",
+};
+
+export function historyGroupTone(group: HistoryGroup): HistoryTone {
+  return GROUP_TONES[group];
+}
+
+// A failed analysis is shown as danger. Every other type takes the tone of its group.
+export function historyTone(type: string): HistoryTone {
+  if (type === "ANALYSIS_FAILED") return "danger";
+  return historyGroupTone(describeHistoryType(type).group);
+}
+
 export function describeHistoryType(type: string): HistoryDescription {
   // hasOwn so keys such as "toString" never match.
   return Object.hasOwn(DESCRIPTIONS, type) ? DESCRIPTIONS[type as HistoryType] : UNKNOWN;

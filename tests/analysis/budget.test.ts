@@ -94,7 +94,19 @@ describe("evaluateBudget", () => {
     });
     expect(cooldown).toMatchObject({ allowed: false, reason: "cooldown" });
     if (!cooldown.allowed) {
-      expect(cooldown.message).toMatch(/^Please wait \d+ seconds before analyzing this report again\.$/);
+      expect(cooldown.message).toMatch(/^Please wait \d+ seconds? before analyzing this report again\.$/);
     }
+  });
+
+  it("uses 'second' for 1 and 'seconds' otherwise in the cooldown message", () => {
+    const message = (elapsedMs: number) => {
+      const d = evaluateBudget(snap({ lastRunForReportAt: NOW - elapsedMs }));
+      return d.allowed ? null : d.message;
+    };
+    expect(message(29_999)).toBe("Please wait 1 second before analyzing this report again.");
+    expect(message(29_000)).toBe("Please wait 1 second before analyzing this report again.");
+    expect(message(28_999)).toBe("Please wait 2 seconds before analyzing this report again.");
+    expect(message(0)).toBe("Please wait 30 seconds before analyzing this report again.");
+    expect(message(30_000)).toBeNull();
   });
 });

@@ -43,7 +43,7 @@ export function evaluateBudget(snapshot: BudgetSnapshot, limits: BudgetLimits = 
         allowed: false,
         reason: "cooldown",
         retryAfterSeconds: seconds,
-        message: `Please wait ${seconds} seconds before analyzing this report again.`,
+        message: `Please wait ${seconds} ${seconds === 1 ? "second" : "seconds"} before analyzing this report again.`,
       };
     }
   }

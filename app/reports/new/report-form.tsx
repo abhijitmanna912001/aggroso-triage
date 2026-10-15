@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { createReportAction } from "@/app/actions";
 import { FieldErrors, FormError } from "@/app/_components/form-messages";
 import { SubmitButton } from "@/app/_components/submit-button";
+import { Button } from "@/app/_components/ui/button";
+import { Card } from "@/app/_components/ui/card";
+import { Field, Input, Select, Textarea } from "@/app/_components/ui/field";
 import type { EquipmentType } from "@/generated/prisma/enums";
 import { REPORT_LIMITS } from "@/lib/reports/schema";
 import { SAMPLE_REPORTS } from "@/lib/samples";
@@ -29,11 +32,7 @@ type ReadingRow = { key: number; sensor: string; value: string; recordedAt: stri
 
 const TIME_KEY = /^(event|reading)\.\d+\.(occurredAt|recordedAt)$/;
 
-const INPUT =
-  "w-full rounded-md border border-zinc-400 bg-transparent px-2 py-1.5 text-sm dark:bg-zinc-900 aria-[invalid=true]:border-red-600 aria-[invalid=true]:border-2 dark:aria-[invalid=true]:border-red-400";
-const BUTTON =
-  "rounded-md border border-zinc-400 px-3 py-1.5 text-sm hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-zinc-800";
-const LABEL = "mb-1 block text-sm font-medium";
+const ROW = "rounded-md border border-line p-3";
 
 // Local time to UTC happens here, in the browser, because only the browser knows the user's time zone.
 async function submitReport(_previous: ActionResult | null, formData: FormData): Promise<ActionResult> {
@@ -42,6 +41,22 @@ async function submitReport(_previous: ActionResult | null, formData: FormData):
     converted.append(key, typeof value === "string" && TIME_KEY.test(key) ? toIsoWithOffset(value) : value);
   }
   return createReportAction(converted);
+}
+
+// Hint under the sensor select, built from the rule the form already has. High sensors alarm from the limit up,
+// low sensors at or below it.
+function describeRule(rule: FormRule): string {
+  const wording = rule.direction === "high" ? "from" : "at or below";
+  return `${rule.unit}. Warning ${wording} ${rule.warning}, critical ${wording} ${rule.critical}.`;
+}
+
+function SectionHeading({ id, title, help }: { id: string; title: string; help: string }) {
+  return (
+    <div className="mb-4 space-y-1">
+      <h2 id={id}>{title}</h2>
+      <p className="text-sm text-muted">{help}</p>
+    </div>
+  );
 }
 
 export function ReportForm({ equipment, rules }: { equipment: FormEquipment[]; rules: FormRules }) {
@@ -114,249 +129,288 @@ export function ReportForm({ equipment, rules }: { equipment: FormEquipment[]; r
   }
 
   return (
-    <form action={formAction} className="space-y-8" noValidate>
-      <div>
-        <label htmlFor="sample" className={LABEL}>
-          Load a sample
-        </label>
-        <select
-          id="sample"
-          value=""
-          onChange={(e) => loadSample(e.target.value)}
-          aria-describedby="sample-hint"
-          className={INPUT}
-        >
-          <option value="">Choose a sample…</option>
-          {SAMPLE_REPORTS.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.label}
-            </option>
-          ))}
-        </select>
-        <p id="sample-hint" className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+    <form action={formAction} className="space-y-6" noValidate>
+      <Card as="section">
+        <SectionHeading
+          id="section-sample"
+          title="Start from a sample"
+          help="Optional. Fills in the whole form so you can try the tool quickly."
+        />
+        <Field id="sample" label="Load a sample">
+          {(p) => (
+            <Select
+              id={p.id}
+              value=""
+              onChange={(e) => loadSample(e.target.value)}
+              aria-describedby="sample-hint"
+            >
+              <option value="">Choose a sample…</option>
+              {SAMPLE_REPORTS.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.label}
+                </option>
+              ))}
+            </Select>
+          )}
+        </Field>
+        <p id="sample-hint" className="mt-1 text-sm text-muted">
           Replaces everything you have entered so far.
         </p>
         {sampleNote ? <p className="mt-1 text-sm">{sampleNote}</p> : null}
-      </div>
+      </Card>
 
-      <div>
-        <label htmlFor="equipmentId" className={LABEL}>
-          Equipment
-        </label>
-        <select
-          id="equipmentId"
-          name="equipmentId"
-          value={equipmentId}
-          onChange={(e) => changeEquipment(e.target.value)}
-          className={INPUT}
-          {...aria("equipmentId")}
-        >
-          <option value="">Choose equipment…</option>
-          {equipment.map((e) => (
-            <option key={e.id} value={e.id}>
-              {e.tag} - {e.name} ({e.type})
-            </option>
-          ))}
-        </select>
-        <FieldErrors id="equipmentId-error" errors={fieldErrors.equipmentId} />
-      </div>
-
-      <div>
-        <label htmlFor="issue" className={LABEL}>
-          Issue
-        </label>
-        <textarea
-          id="issue"
-          name="issue"
-          rows={5}
-          maxLength={REPORT_LIMITS.issueMax}
-          value={issue}
-          onChange={(e) => setIssue(e.target.value)}
-          className={INPUT}
-          {...aria("issue", "issue-count")}
+      <Card as="section">
+        <SectionHeading
+          id="section-equipment"
+          title="Equipment and issue"
+          help="Which machine has the problem, and what you are seeing."
         />
-        <p id="issue-count" className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          {issue.length} / {REPORT_LIMITS.issueMax} characters (at least {REPORT_LIMITS.issueMin})
-        </p>
-        <FieldErrors id="issue-error" errors={fieldErrors.issue} />
-      </div>
-
-      <fieldset className="space-y-3">
-        <legend className="text-sm font-medium">Recent events (optional)</legend>
-        {events.map((row, index) => {
-          const d = `event.${row.key}.description`;
-          const t = `event.${row.key}.occurredAt`;
-          return (
-            <div key={row.key} className="grid gap-3 rounded-md border border-zinc-300 p-3 sm:grid-cols-[1fr_auto_auto] sm:items-end dark:border-zinc-700">
-              <div>
-                <label htmlFor={d} className={LABEL}>
-                  Event {index + 1} description
-                </label>
-                <input
-                  id={d}
-                  name={d}
-                  type="text"
-                  maxLength={REPORT_LIMITS.eventMax}
-                  value={row.description}
-                  onChange={(e) => patchEvent(row.key, { description: e.target.value })}
-                  className={INPUT}
-                  {...aria(d)}
-                />
-                <FieldErrors id={`${d}-error`} errors={fieldErrors[d]} />
-              </div>
-              <div>
-                <label htmlFor={t} className={LABEL}>
-                  Event {index + 1} time
-                </label>
-                <input
-                  id={t}
-                  name={t}
-                  type="datetime-local"
-                  value={row.occurredAt}
-                  onChange={(e) => patchEvent(row.key, { occurredAt: e.target.value })}
-                  className={INPUT}
-                  {...aria(t)}
-                />
-                <FieldErrors id={`${t}-error`} errors={fieldErrors[t]} />
-              </div>
-              <button
-                type="button"
-                className={BUTTON}
-                onClick={() => setEvents((rows) => rows.filter((r) => r.key !== row.key))}
-              >
-                Remove<span className="sr-only"> event {index + 1}</span>
-              </button>
-            </div>
-          );
-        })}
-        <button
-          type="button"
-          className={BUTTON}
-          disabled={events.length >= REPORT_LIMITS.events}
-          onClick={() => setEvents((rows) => [...rows, { key: takeKey(), description: "", occurredAt: "" }])}
-        >
-          Add event
-        </button>
-        {events.length >= REPORT_LIMITS.events ? (
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Maximum of {REPORT_LIMITS.events} events.</p>
-        ) : null}
-      </fieldset>
-
-      <fieldset className="space-y-3">
-        <legend className="text-sm font-medium">Sensor readings (optional)</legend>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          Sensor readings are optional. Any sensor the threshold checks expect that you leave out will be flagged as
-          missing.
-        </p>
-        {readings.map((row, index) => {
-          const s = `reading.${row.key}.sensor`;
-          const v = `reading.${row.key}.value`;
-          const t = `reading.${row.key}.recordedAt`;
-          const o = `reading.${row.key}.source`;
-          const rule = sensors.find((r) => r.sensor === row.sensor);
-          return (
-            <div key={row.key} className="grid gap-3 rounded-md border border-zinc-300 p-3 sm:grid-cols-2 dark:border-zinc-700">
-              <div>
-                <label htmlFor={s} className={LABEL}>
-                  Reading {index + 1} sensor
-                </label>
-                <select
-                  id={s}
-                  name={s}
-                  value={row.sensor}
-                  disabled={selected === undefined}
-                  onChange={(e) => patchReading(row.key, { sensor: e.target.value })}
-                  className={INPUT}
-                  {...aria(s, selected === undefined ? `${s}-hint` : undefined)}
+        <div className="space-y-4">
+          <Field id="equipmentId" label="Equipment">
+            {(p) => (
+              <>
+                <Select
+                  id={p.id}
+                  name="equipmentId"
+                  value={equipmentId}
+                  onChange={(e) => changeEquipment(e.target.value)}
+                  {...aria("equipmentId")}
                 >
-                  <option value="">{selected === undefined ? "Choose equipment first" : "Choose a sensor…"}</option>
-                  {sensors.map((r) => (
-                    <option key={r.sensor} value={r.sensor}>
-                      {r.sensor} ({r.unit})
+                  <option value="">Choose equipment…</option>
+                  {equipment.map((e) => (
+                    <option key={e.id} value={e.id}>
+                      {e.tag} - {e.name} ({e.type})
                     </option>
                   ))}
-                </select>
-                {selected === undefined ? (
-                  <span id={`${s}-hint`} className="sr-only">
-                    Choose equipment to see its sensors
-                  </span>
-                ) : null}
-                <FieldErrors id={`${s}-error`} errors={fieldErrors[s]} />
-              </div>
-              <div>
-                <label htmlFor={v} className={LABEL}>
-                  Reading {index + 1} value{rule ? ` (${rule.unit})` : ""}
-                </label>
-                <input
-                  id={v}
-                  name={v}
-                  type="number"
-                  step="any"
-                  inputMode="decimal"
-                  value={row.value}
-                  onChange={(e) => patchReading(row.key, { value: e.target.value })}
-                  className={INPUT}
-                  {...aria(v)}
+                </Select>
+                <FieldErrors id="equipmentId-error" errors={fieldErrors.equipmentId} />
+              </>
+            )}
+          </Field>
+
+          <Field id="issue" label="Issue">
+            {(p) => (
+              <>
+                <Textarea
+                  id={p.id}
+                  name="issue"
+                  rows={5}
+                  maxLength={REPORT_LIMITS.issueMax}
+                  value={issue}
+                  onChange={(e) => setIssue(e.target.value)}
+                  {...aria("issue", "issue-count")}
                 />
-                <FieldErrors id={`${v}-error`} errors={fieldErrors[v]} />
-              </div>
-              <div>
-                <label htmlFor={t} className={LABEL}>
-                  Reading {index + 1} time
-                </label>
-                <input
-                  id={t}
-                  name={t}
-                  type="datetime-local"
-                  value={row.recordedAt}
-                  onChange={(e) => patchReading(row.key, { recordedAt: e.target.value })}
-                  className={INPUT}
-                  {...aria(t)}
-                />
-                <FieldErrors id={`${t}-error`} errors={fieldErrors[t]} />
-              </div>
-              <div>
-                <label htmlFor={o} className={LABEL}>
-                  Reading {index + 1} source
-                </label>
-                <input
-                  id={o}
-                  name={o}
-                  type="text"
-                  maxLength={REPORT_LIMITS.sourceMax}
-                  value={row.source}
-                  onChange={(e) => patchReading(row.key, { source: e.target.value })}
-                  className={INPUT}
-                  {...aria(o)}
-                />
-                <FieldErrors id={`${o}-error`} errors={fieldErrors[o]} />
-              </div>
-              <div className="sm:col-span-2">
-                <button
-                  type="button"
-                  className={BUTTON}
-                  onClick={() => setReadings((rows) => rows.filter((r) => r.key !== row.key))}
-                >
-                  Remove<span className="sr-only"> reading {index + 1}</span>
-                </button>
-              </div>
-            </div>
-          );
-        })}
-        <button
-          type="button"
-          className={BUTTON}
-          disabled={readings.length >= REPORT_LIMITS.readings}
-          onClick={() =>
-            setReadings((rows) => [...rows, { key: takeKey(), sensor: "", value: "", recordedAt: "", source: "" }])
-          }
-        >
-          Add reading
-        </button>
-        {readings.length >= REPORT_LIMITS.readings ? (
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Maximum of {REPORT_LIMITS.readings} readings.</p>
-        ) : null}
-      </fieldset>
+                <p id="issue-count" className="mt-1 text-sm text-muted">
+                  {issue.length} / {REPORT_LIMITS.issueMax} characters (at least {REPORT_LIMITS.issueMin})
+                </p>
+                <FieldErrors id="issue-error" errors={fieldErrors.issue} />
+              </>
+            )}
+          </Field>
+        </div>
+      </Card>
+
+      <Card as="section">
+        <SectionHeading
+          id="section-events"
+          title="Recent events"
+          help="Optional. Anything that happened before the problem, such as maintenance or a process change."
+        />
+        <div className="space-y-3">
+          {events.length > 0 ? (
+            <ul className="space-y-3">
+              {events.map((row, index) => {
+                const d = `event.${row.key}.description`;
+                const t = `event.${row.key}.occurredAt`;
+                return (
+                  <li key={row.key} className={`${ROW} grid gap-3 sm:grid-cols-[1fr_auto_auto] sm:items-end`}>
+                    <Field id={d} label={`Event ${index + 1} description`}>
+                      {(p) => (
+                        <>
+                          <Input
+                            id={p.id}
+                            name={d}
+                            type="text"
+                            maxLength={REPORT_LIMITS.eventMax}
+                            value={row.description}
+                            onChange={(e) => patchEvent(row.key, { description: e.target.value })}
+                            {...aria(d)}
+                          />
+                          <FieldErrors id={`${d}-error`} errors={fieldErrors[d]} />
+                        </>
+                      )}
+                    </Field>
+                    <Field id={t} label={`Event ${index + 1} time`}>
+                      {(p) => (
+                        <>
+                          <Input
+                            id={p.id}
+                            name={t}
+                            type="datetime-local"
+                            value={row.occurredAt}
+                            onChange={(e) => patchEvent(row.key, { occurredAt: e.target.value })}
+                            {...aria(t)}
+                          />
+                          <FieldErrors id={`${t}-error`} errors={fieldErrors[t]} />
+                        </>
+                      )}
+                    </Field>
+                    <Button
+                      variant="ghost"
+                      size="md"
+                      onClick={() => setEvents((rows) => rows.filter((r) => r.key !== row.key))}
+                    >
+                      Remove<span className="sr-only"> event {index + 1}</span>
+                    </Button>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+          <Button
+            variant="secondary"
+            disabled={events.length >= REPORT_LIMITS.events}
+            onClick={() => setEvents((rows) => [...rows, { key: takeKey(), description: "", occurredAt: "" }])}
+          >
+            Add event
+          </Button>
+          {events.length >= REPORT_LIMITS.events ? (
+            <p className="text-sm text-muted">Maximum of {REPORT_LIMITS.events} events.</p>
+          ) : null}
+        </div>
+      </Card>
+
+      <Card as="section">
+        <SectionHeading
+          id="section-readings"
+          title="Sensor readings"
+          help="Optional. Any sensor the threshold checks expect that you leave out will be flagged as missing."
+        />
+        <div className="space-y-3">
+          {readings.length > 0 ? (
+            <ul className="space-y-3">
+              {readings.map((row, index) => {
+                const s = `reading.${row.key}.sensor`;
+                const v = `reading.${row.key}.value`;
+                const t = `reading.${row.key}.recordedAt`;
+                const o = `reading.${row.key}.source`;
+                const rule = sensors.find((r) => r.sensor === row.sensor);
+                const noEquipmentHint = selected === undefined ? `${s}-hint` : undefined;
+                const ruleHint = rule ? `${s}-rule` : undefined;
+                return (
+                  <li key={row.key} className={`${ROW} grid gap-3 sm:grid-cols-2`}>
+                    <div>
+                      <Field id={s} label={`Reading ${index + 1} sensor`}>
+                        {(p) => (
+                          <>
+                            <Select
+                              id={p.id}
+                              name={s}
+                              value={row.sensor}
+                              disabled={selected === undefined}
+                              onChange={(e) => patchReading(row.key, { sensor: e.target.value })}
+                              {...aria(s, noEquipmentHint ?? ruleHint)}
+                            >
+                              <option value="">
+                                {selected === undefined ? "Choose equipment first" : "Choose a sensor…"}
+                              </option>
+                              {sensors.map((r) => (
+                                <option key={r.sensor} value={r.sensor}>
+                                  {r.sensor} ({r.unit})
+                                </option>
+                              ))}
+                            </Select>
+                            {selected === undefined ? (
+                              <span id={`${s}-hint`} className="sr-only">
+                                Choose equipment to see its sensors
+                              </span>
+                            ) : null}
+                            {rule ? (
+                              <p id={`${s}-rule`} className="text-sm text-muted">
+                                {describeRule(rule)}
+                              </p>
+                            ) : null}
+                            <FieldErrors id={`${s}-error`} errors={fieldErrors[s]} />
+                          </>
+                        )}
+                      </Field>
+                    </div>
+                    <Field id={v} label={`Reading ${index + 1} value${rule ? ` (${rule.unit})` : ""}`}>
+                      {(p) => (
+                        <>
+                          <Input
+                            id={p.id}
+                            name={v}
+                            type="number"
+                            step="any"
+                            inputMode="decimal"
+                            value={row.value}
+                            onChange={(e) => patchReading(row.key, { value: e.target.value })}
+                            {...aria(v)}
+                          />
+                          <FieldErrors id={`${v}-error`} errors={fieldErrors[v]} />
+                        </>
+                      )}
+                    </Field>
+                    <Field id={t} label={`Reading ${index + 1} time`}>
+                      {(p) => (
+                        <>
+                          <Input
+                            id={p.id}
+                            name={t}
+                            type="datetime-local"
+                            value={row.recordedAt}
+                            onChange={(e) => patchReading(row.key, { recordedAt: e.target.value })}
+                            {...aria(t)}
+                          />
+                          <FieldErrors id={`${t}-error`} errors={fieldErrors[t]} />
+                        </>
+                      )}
+                    </Field>
+                    <Field id={o} label={`Reading ${index + 1} source`}>
+                      {(p) => (
+                        <>
+                          <Input
+                            id={p.id}
+                            name={o}
+                            type="text"
+                            maxLength={REPORT_LIMITS.sourceMax}
+                            value={row.source}
+                            onChange={(e) => patchReading(row.key, { source: e.target.value })}
+                            {...aria(o)}
+                          />
+                          <FieldErrors id={`${o}-error`} errors={fieldErrors[o]} />
+                        </>
+                      )}
+                    </Field>
+                    <div className="sm:col-span-2">
+                      <Button
+                        variant="ghost"
+                        size="md"
+                        onClick={() => setReadings((rows) => rows.filter((r) => r.key !== row.key))}
+                      >
+                        Remove<span className="sr-only"> reading {index + 1}</span>
+                      </Button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+          <Button
+            variant="secondary"
+            disabled={readings.length >= REPORT_LIMITS.readings}
+            onClick={() =>
+              setReadings((rows) => [...rows, { key: takeKey(), sensor: "", value: "", recordedAt: "", source: "" }])
+            }
+          >
+            Add reading
+          </Button>
+          {readings.length >= REPORT_LIMITS.readings ? (
+            <p className="text-sm text-muted">Maximum of {REPORT_LIMITS.readings} readings.</p>
+          ) : null}
+        </div>
+      </Card>
 
       <div className="space-y-3">
         <FormError id="form-error" message={formError} />

@@ -1,8 +1,11 @@
+import { Skeleton } from "../_components/ui/skeleton";
+
 export default function Loading() {
   return (
-    <div role="status" aria-label="Loading equipment" className="space-y-2">
+    <div role="status" aria-label="Loading equipment" className="space-y-3">
+      <Skeleton className="h-9 w-1/3" />
       {[0, 1, 2, 3, 4].map((i) => (
-        <div key={i} className="h-12 animate-pulse rounded-md bg-zinc-200 dark:bg-zinc-800" />
+        <Skeleton key={i} className="h-16 w-full" />
       ))}
     </div>
   );
