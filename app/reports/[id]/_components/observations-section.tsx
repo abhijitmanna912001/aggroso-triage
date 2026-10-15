@@ -1,5 +1,6 @@
 import { formatUtc } from "@/lib/ui/format";
 import type { Workspace } from "./evidence-chips";
+import { ObservationForm } from "./observation-form";
 import { ThresholdsTable } from "./thresholds-table";
 
 const MUTED = "text-sm text-zinc-600 dark:text-zinc-400";
@@ -9,7 +10,9 @@ export function ObservationsSection({
   readings,
   thresholds,
   observations,
-}: Pick<Workspace, "events" | "readings" | "thresholds" | "observations">) {
+  reportId,
+  signedIn,
+}: Pick<Workspace, "events" | "readings" | "thresholds" | "observations"> & { reportId: number; signedIn: boolean }) {
   return (
     <section id="observations" aria-labelledby="observations-heading" className="mt-10 scroll-mt-4">
       <h2 id="observations-heading" className="text-xl font-semibold">Observations</h2>
@@ -84,6 +87,7 @@ export function ObservationsSection({
           ))}
         </ul>
       )}
+      <ObservationForm reportId={reportId} signedIn={signedIn} />
     </section>
   );
 }

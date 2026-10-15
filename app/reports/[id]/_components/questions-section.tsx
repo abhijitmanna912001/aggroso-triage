@@ -1,12 +1,17 @@
 import { formatUtc } from "@/lib/ui/format";
+import { AnswerForm } from "./answer-form";
 import { EvidenceChips, buildSources, type Workspace } from "./evidence-chips";
 
 export function QuestionsSection({
   questions,
   ws,
+  reportId,
+  signedIn,
 }: {
   questions: Workspace["questions"];
   ws: Pick<Workspace, "chunks" | "events" | "thresholds">;
+  reportId: number;
+  signedIn: boolean;
 }) {
   const sources = buildSources(ws);
   return (
@@ -28,7 +33,10 @@ export function QuestionsSection({
                   </p>
                 </div>
               ) : (
-                <p className="mt-3 text-zinc-600 dark:text-zinc-400">Awaiting an answer</p>
+                <div className="mt-3">
+                  <p className="text-zinc-600 dark:text-zinc-400">Awaiting an answer</p>
+                  <AnswerForm reportId={reportId} questionId={q.id} signedIn={signedIn} />
+                </div>
               )}
             </li>
           ))}

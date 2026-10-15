@@ -1,6 +1,7 @@
 import { WorkOrderStatusBadge } from "@/app/_components/status-badge";
 import { formatUtc } from "@/lib/ui/format";
 import type { Workspace } from "./evidence-chips";
+import { ApprovePanel, EditWorkOrderForm, RejectPanel } from "./work-order-forms";
 
 const BASE = "inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-medium";
 
@@ -34,7 +35,15 @@ function author(version: { source: string; editedBy: string | null }): string {
   return version.source === "AI" ? "AI" : (version.editedBy ?? "a technician");
 }
 
-export function WorkOrderSection({ workOrder }: { workOrder: Workspace["workOrder"] }) {
+export function WorkOrderSection({
+  workOrder,
+  reportId,
+  signedIn,
+}: {
+  workOrder: Workspace["workOrder"];
+  reportId: number;
+  signedIn: boolean;
+}) {
   const latest = workOrder?.versions[0] ?? null;
   const decided = workOrder !== null && (workOrder.status === "APPROVED" || workOrder.status === "REJECTED");
 
@@ -76,6 +85,22 @@ export function WorkOrderSection({ workOrder }: { workOrder: Workspace["workOrde
               </dl>
             </div>
           ) : null}
+
+          {decided ? (
+            <p>This work order has been decided and can no longer be edited.</p>
+          ) : (
+            <div className="space-y-4">
+              <EditWorkOrderForm
+                key={latest.versionNumber}
+                reportId={reportId}
+                signedIn={signedIn}
+                expectedVersion={latest.versionNumber}
+                initial={{ title: latest.title, description: latest.description, priority: latest.priority }}
+              />
+              <ApprovePanel reportId={reportId} signedIn={signedIn} expectedVersion={latest.versionNumber} />
+              <RejectPanel reportId={reportId} signedIn={signedIn} expectedVersion={latest.versionNumber} />
+            </div>
+          )}
 
           <details className="rounded-md border border-zinc-300 p-4 dark:border-zinc-700">
             <summary className="cursor-pointer font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">

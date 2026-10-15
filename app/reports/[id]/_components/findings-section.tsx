@@ -1,12 +1,17 @@
 import { formatUtc } from "@/lib/ui/format";
 import type { Workspace } from "./evidence-chips";
+import { FindingForm } from "./finding-form";
 
 export function FindingsSection({
   findings,
   hypotheses,
+  reportId,
+  signedIn,
 }: {
   findings: Workspace["findings"];
   hypotheses: Workspace["hypotheses"];
+  reportId: number;
+  signedIn: boolean;
 }) {
   const causes = new Map(hypotheses.map((h) => [h.id, h.cause] as const));
   return (
@@ -38,6 +43,11 @@ export function FindingsSection({
           })}
         </ul>
       )}
+      <FindingForm
+        reportId={reportId}
+        signedIn={signedIn}
+        hypotheses={hypotheses.map((h) => ({ id: h.id, cause: h.cause }))}
+      />
     </section>
   );
 }

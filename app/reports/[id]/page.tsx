@@ -65,13 +65,20 @@ async function Workspace({ params }: { params: Promise<{ id: string }> }) {
         readings={ws.readings}
         thresholds={ws.thresholds}
         observations={ws.observations}
+        reportId={ws.report.id}
+        signedIn={signedIn}
       />
       <AnalysisPanel run={ws.latestRun} chunks={ws.chunks} reportId={ws.report.id} signedIn={signedIn} />
       <CausesSection hypotheses={ws.hypotheses} run={ws.latestRun} ws={ws} />
-      <FindingsSection findings={ws.findings} hypotheses={ws.hypotheses} />
-      <QuestionsSection questions={ws.questions} ws={ws} />
+      <FindingsSection
+        findings={ws.findings}
+        hypotheses={ws.hypotheses}
+        reportId={ws.report.id}
+        signedIn={signedIn}
+      />
+      <QuestionsSection questions={ws.questions} ws={ws} reportId={ws.report.id} signedIn={signedIn} />
       <StepsSection steps={ws.steps} ws={ws} />
-      <WorkOrderSection workOrder={ws.workOrder} />
+      <WorkOrderSection workOrder={ws.workOrder} reportId={ws.report.id} signedIn={signedIn} />
     </div>
   );
 }
