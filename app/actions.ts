@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { evaluateBudget } from "@/lib/analysis/budget";
 import { analysisLogFields, analyzeReport } from "@/lib/analysis/orchestrate";
 import { createReport } from "@/lib/reports/create";
 import { ReportValidationError } from "@/lib/reports/errors";
@@ -11,6 +12,7 @@ import { parseReportForm } from "@/lib/reports/schema";
 import { approveWorkOrder, editWorkOrder, rejectWorkOrder } from "@/lib/reports/workorder";
 import { actionFailure, actionOk, errorLogFields, toActionFailure, type ActionResult } from "@/lib/server/action-result";
 import { createAnalysisDeps } from "@/lib/server/analysis-wiring";
+import { getBudgetSnapshot } from "@/lib/server/budget";
 import {
   parseAnswerForm,
   parseDecisionForm,
@@ -89,6 +91,11 @@ export async function analyzeReportAction(formData: FormData): Promise<ActionRes
     const parsed = parseReportIdForm(formData);
     if (!parsed.ok) return invalid(parsed);
     const { reportId } = parsed.data;
+    const decision = evaluateBudget(await getBudgetSnapshot(reportId, Date.now()));
+    if (!decision.allowed) {
+      logger.warn({ event: "analysis_blocked", reason: decision.reason, reportId }, "analysis blocked by budget");
+      return actionFailure(decision.message);
+    }
     const result = await analyzeReport(createAnalysisDeps(), { reportId, actor });
     logger.info(analysisLogFields({ ...result, reportId }), "analysis finished");
     revalidatePath(reportPath(reportId));

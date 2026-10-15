@@ -33,6 +33,7 @@ Take-home assessment build. The owner must be able to explain every decision. Pr
 
 ## Before saying a task is done
 - Run `npm run lint`, `npx tsc --noEmit` and `npm test`.
+- After adding or renaming routes, run `npm run build` before `npx tsc --noEmit`, because Next.js generates the route types during the build.
 
 ## Logging
 - Use the logger from lib/logger.ts for server-side logs. Never log connection strings, keys or passwords, and never put them in log messages.
