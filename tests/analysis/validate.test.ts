@@ -1,0 +1,214 @@
+import { describe, expect, it } from "vitest";
+import type { AllowedCitations } from "../../lib/analysis/prompt";
+import type { AnalysisOutput } from "../../lib/analysis/schema";
+import { validateAnalysis } from "../../lib/analysis/validate";
+
+const allowed: AllowedCitations = {
+  manual: ["pump-4-2", "pump-5-1"],
+  event: ["1", "2"],
+  threshold: ["PUMP.vibration"],
+};
+
+const manual = { type: "manual", id: "pump-4-2" } as const;
+const event = { type: "event", id: "1" } as const;
+
+function makeOutput(overrides: Partial<AnalysisOutput> = {}): AnalysisOutput {
+  return {
+    hypotheses: [{ cause: "Possible bearing wear", rationale: "High vibration", confidence: "MEDIUM", citations: [manual] }],
+    followUpQuestions: [{ question: "When was it lubricated?", citations: [event] }],
+    inspectionSteps: [{ instruction: "Isolate and lock out, then inspect.", citations: [manual] }],
+    proposedPriority: "MEDIUM",
+    priorityRationale: "Moderate",
+    draftWorkOrder: { title: "Inspect pump", description: "Check it." },
+    limitations: ["None known"],
+    ...overrides,
+  };
+}
+
+const none = { priorityFloor: null } as const;
+
+describe("validateAnalysis citations", () => {
+  it("keeps everything when all citations are valid", () => {
+    const result = validateAnalysis(makeOutput(), allowed, none);
+    expect(result.accepted.hypotheses).toHaveLength(1);
+    expect(result.accepted.followUpQuestions).toHaveLength(1);
+    expect(result.accepted.inspectionSteps).toHaveLength(1);
+    expect(result.dropped).toEqual([]);
+    expect(result.notes).toEqual([]);
+  });
+
+  it("drops an item whose citation id is not allowed", () => {
+    const output = makeOutput({
+      hypotheses: [{ cause: "X", rationale: "r", confidence: "LOW", citations: [{ type: "manual", id: "pump-9-9" }] }],
+    });
+    const result = validateAnalysis(output, allowed, none);
+    expect(result.accepted.hypotheses).toEqual([]);
+    expect(result.dropped).toEqual([{ kind: "hypothesis", index: 0, reason: "no valid citation" }]);
+  });
+
+  it("drops a citation with a right id but the wrong type", () => {
+    const output = makeOutput({
+      followUpQuestions: [{ question: "Q?", citations: [{ type: "event", id: "pump-4-2" }] }],
+    });
+    const result = validateAnalysis(output, allowed, none);
+    expect(result.accepted.followUpQuestions).toEqual([]);
+    expect(result.dropped).toEqual([{ kind: "question", index: 0, reason: "no valid citation" }]);
+  });
+
+  it("trims invalid citations from a mixed item and notes the count", () => {
+    const output = makeOutput({
+      hypotheses: [
+        {
+          cause: "X",
+          rationale: "r",
+          confidence: "HIGH",
+          citations: [manual, { type: "manual", id: "nope" }, { type: "event", id: "99" }],
+        },
+      ],
+    });
+    const result = validateAnalysis(output, allowed, none);
+    expect(result.accepted.hypotheses[0].citations).toEqual([manual]);
+    expect(result.notes).toEqual(["hypothesis 1: removed 2 invalid or duplicate citation(s)"]);
+    expect(result.dropped).toEqual([]);
+  });
+
+  it("drops an item left with only invalid citations", () => {
+    const output = makeOutput({
+      inspectionSteps: [{ instruction: "Look", citations: [{ type: "threshold", id: "PUMP.temp" }] }],
+    });
+    const result = validateAnalysis(output, allowed, none);
+    expect(result.accepted.inspectionSteps).toEqual([]);
+    expect(result.dropped).toEqual([{ kind: "step", index: 0, reason: "no valid citation" }]);
+    expect(result.notes).toEqual(["step 1: removed 1 invalid or duplicate citation(s)"]);
+  });
+
+  it("removes duplicate citations", () => {
+    const output = makeOutput({
+      followUpQuestions: [{ question: "Q?", citations: [event, { ...event }, event] }],
+    });
+    const result = validateAnalysis(output, allowed, none);
+    expect(result.accepted.followUpQuestions[0].citations).toEqual([event]);
+    expect(result.notes).toEqual(["question 1: removed 2 invalid or duplicate citation(s)"]);
+  });
+
+  it("keeps the original index when an earlier item is dropped", () => {
+    const output = makeOutput({
+      followUpQuestions: [
+        { question: "bad", citations: [] },
+        { question: "good", citations: [event] },
+      ],
+    });
+    const result = validateAnalysis(output, allowed, none);
+    expect(result.accepted.followUpQuestions.map((q) => q.question)).toEqual(["good"]);
+    expect(result.dropped).toEqual([{ kind: "question", index: 0, reason: "no valid citation" }]);
+  });
+});
+
+describe("validateAnalysis text and caps", () => {
+  it("drops items with empty or whitespace main text and trims the rest", () => {
+    const output = makeOutput({
+      hypotheses: [
+        { cause: "   ", rationale: "r", confidence: "LOW", citations: [manual] },
+        { cause: "  Possible leak  ", rationale: "  why  ", confidence: "LOW", citations: [manual] },
+      ],
+      followUpQuestions: [{ question: "", citations: [event] }],
+      inspectionSteps: [{ instruction: "\n\t", citations: [manual] }],
+      priorityRationale: "  reason  ",
+      draftWorkOrder: { title: "  T  ", description: "  D  " },
+      limitations: ["  a  ", "   "],
+    });
+    const result = validateAnalysis(output, allowed, none);
+    expect(result.dropped).toEqual([
+      { kind: "hypothesis", index: 0, reason: "empty text" },
+      { kind: "question", index: 0, reason: "empty text" },
+      { kind: "step", index: 0, reason: "empty text" },
+    ]);
+    expect(result.accepted.hypotheses).toEqual([
+      { cause: "Possible leak", rationale: "why", confidence: "LOW", citations: [manual] },
+    ]);
+    expect(result.accepted.priorityRationale).toBe("reason");
+    expect(result.accepted.draftWorkOrder).toEqual({ title: "T", description: "D" });
+    expect(result.accepted.limitations).toEqual(["a"]);
+  });
+
+  it("caps each list in the model's order and notes the removal", () => {
+    const output = makeOutput({
+      hypotheses: Array.from({ length: 7 }, (_, i) => ({
+        cause: `cause ${i}`,
+        rationale: "r",
+        confidence: "LOW" as const,
+        citations: [manual],
+      })),
+      followUpQuestions: Array.from({ length: 8 }, (_, i) => ({ question: `q ${i}`, citations: [event] })),
+      inspectionSteps: Array.from({ length: 12 }, (_, i) => ({ instruction: `s ${i}`, citations: [manual] })),
+    });
+    const result = validateAnalysis(output, allowed, none);
+    expect(result.accepted.hypotheses.map((h) => h.cause)).toEqual(["cause 0", "cause 1", "cause 2", "cause 3", "cause 4"]);
+    expect(result.accepted.followUpQuestions).toHaveLength(6);
+    expect(result.accepted.inspectionSteps).toHaveLength(10);
+    expect(result.accepted.inspectionSteps[0].instruction).toBe("s 0");
+    expect(result.notes).toHaveLength(3);
+    expect(result.notes[0]).toContain("2 removed");
+  });
+
+  it("does not add a cap note at exactly the limit", () => {
+    const output = makeOutput({
+      hypotheses: Array.from({ length: 5 }, (_, i) => ({
+        cause: `c${i}`,
+        rationale: "r",
+        confidence: "LOW" as const,
+        citations: [manual],
+      })),
+    });
+    expect(validateAnalysis(output, allowed, none).notes).toEqual([]);
+  });
+});
+
+describe("validateAnalysis priority", () => {
+  it("raises LOW to HIGH under a HIGH floor", () => {
+    const result = validateAnalysis(makeOutput({ proposedPriority: "LOW" }), allowed, { priorityFloor: "HIGH" });
+    expect(result.accepted.priority).toBe("HIGH");
+    expect(result.priorityRaisedByFloor).toBe(true);
+  });
+
+  it("raises MEDIUM to URGENT under an URGENT floor", () => {
+    const result = validateAnalysis(makeOutput({ proposedPriority: "MEDIUM" }), allowed, { priorityFloor: "URGENT" });
+    expect(result.accepted.priority).toBe("URGENT");
+    expect(result.priorityRaisedByFloor).toBe(true);
+  });
+
+  it("keeps a higher model priority and does not report a raise", () => {
+    const result = validateAnalysis(makeOutput({ proposedPriority: "URGENT" }), allowed, { priorityFloor: "HIGH" });
+    expect(result.accepted.priority).toBe("URGENT");
+    expect(result.priorityRaisedByFloor).toBe(false);
+  });
+
+  it("does not report a raise when the model already equals the floor", () => {
+    const result = validateAnalysis(makeOutput({ proposedPriority: "HIGH" }), allowed, { priorityFloor: "HIGH" });
+    expect(result.accepted.priority).toBe("HIGH");
+    expect(result.priorityRaisedByFloor).toBe(false);
+  });
+
+  it("never lowers a priority", () => {
+    for (const priority of ["LOW", "MEDIUM", "HIGH", "URGENT"] as const) {
+      expect(validateAnalysis(makeOutput({ proposedPriority: priority }), allowed, none).accepted.priority).toBe(priority);
+    }
+  });
+});
+
+describe("validateAnalysis purity", () => {
+  it("does not mutate its inputs", () => {
+    const output = makeOutput({
+      hypotheses: [
+        { cause: "  X  ", rationale: " r ", confidence: "LOW", citations: [manual, manual, { type: "manual", id: "bad" }] },
+      ],
+      proposedPriority: "LOW",
+      limitations: [" a ", ""],
+    });
+    const allowedCopy = structuredClone(allowed);
+    const before = structuredClone(output);
+    validateAnalysis(output, allowed, { priorityFloor: "URGENT" });
+    expect(output).toEqual(before);
+    expect(allowed).toEqual(allowedCopy);
+  });
+});
