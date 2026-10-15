@@ -68,6 +68,7 @@ export function ReportForm({ equipment, rules }: Readonly<{ equipment: FormEquip
   const [events, setEvents] = useState<EventRow[]>([]);
   const [readings, setReadings] = useState<ReadingRow[]>([]);
   const [sampleNote, setSampleNote] = useState<string | null>(null);
+  const [loadedSampleLabel, setLoadedSampleLabel] = useState<string | null>(null);
   // Only ever increases, so a row number is never reused and error keys keep matching the right input.
   const nextKey = useRef(0);
   const takeKey = () => nextKey.current++;
@@ -105,6 +106,7 @@ export function ReportForm({ equipment, rules }: Readonly<{ equipment: FormEquip
   function loadSample(id: string) {
     const sample = SAMPLE_REPORTS.find((s) => s.id === id);
     if (!sample) return;
+    setLoadedSampleLabel(sample.label);
     const match = equipment.find((e) => e.tag === sample.equipmentTag);
     setEquipmentId(match ? String(match.id) : "");
     setSampleNote(match ? null : `Equipment ${sample.equipmentTag} was not found. Choose equipment yourself.`);
@@ -153,6 +155,9 @@ export function ReportForm({ equipment, rules }: Readonly<{ equipment: FormEquip
             </Select>
           )}
         </Field>
+        <p role="status" className="mt-1 text-sm text-muted">
+          {loadedSampleLabel ? `Started from sample: ${loadedSampleLabel}. You can edit any field.` : ""}
+        </p>
         <p id="sample-hint" className="mt-1 text-sm text-muted">
           Replaces everything you have entered so far.
         </p>
