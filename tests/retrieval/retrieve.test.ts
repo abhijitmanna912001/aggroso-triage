@@ -227,3 +227,91 @@ describe("retrieveChunks", () => {
     expect(result.chunks[0].similarity).toBeCloseTo(1);
   });
 });
+
+describe("retrieveChunks relevance cutoff", () => {
+  // Cosine against QUERY_VECTOR [1,0,0,0] equals the first component for unit vectors.
+  const HIGH = [1, 0, 0, 0];
+  const LOW = [0.1, Math.sqrt(1 - 0.01), 0, 0]; // similarity 0.1
+
+  it("drops a semantic-only chunk below the cutoff and counts it", async () => {
+    const result = await retrieveChunks(
+      input,
+      makeDeps({
+        keywordSearch: vi.fn(async () => []),
+        loadChunks: vi.fn(async () => [loaded("hi", HIGH), loaded("lo", LOW)]),
+      }),
+    );
+    expect(result.chunks.map((c) => c.id)).toEqual(["hi"]);
+    expect(result.belowCutoff).toBe(1);
+  });
+
+  it("keeps a chunk exactly at the cutoff", async () => {
+    const result = await retrieveChunks(
+      input,
+      makeDeps({
+        keywordSearch: vi.fn(async () => []),
+        loadChunks: vi.fn(async () => [loaded("hi", HIGH)]),
+      }),
+      { minSimilarity: 1 },
+    );
+    expect(result.chunks.map((c) => c.id)).toEqual(["hi"]);
+    expect(result.belowCutoff).toBe(0);
+  });
+
+  it("keeps a below-cutoff chunk that the keyword path found, with its similarity", async () => {
+    const result = await retrieveChunks(
+      input,
+      makeDeps({
+        keywordSearch: vi.fn(async () => [row("lo")]),
+        loadChunks: vi.fn(async () => [loaded("lo", LOW)]),
+      }),
+    );
+    expect(result.belowCutoff).toBe(1);
+    expect(result.chunks).toHaveLength(1);
+    expect(result.chunks[0].id).toBe("lo");
+    expect(result.chunks[0].similarity).toBeCloseTo(0.1);
+    expect(result.chunks[0].sources.map((s) => s.name)).toEqual(["keyword"]);
+  });
+
+  it("gives HYBRID, no chunks and no_matches when everything is below the cutoff", async () => {
+    const result = await retrieveChunks(
+      input,
+      makeDeps({
+        keywordSearch: vi.fn(async () => []),
+        loadChunks: vi.fn(async () => [loaded("x", LOW), loaded("y", LOW)]),
+      }),
+    );
+    expect(result.mode).toBe("HYBRID");
+    expect(result.chunks).toEqual([]);
+    expect(result.warnings.map((w) => w.stage)).toEqual(["no_matches"]);
+    expect(result.belowCutoff).toBe(2);
+  });
+
+  it("keeps everything with minSimilarity 0", async () => {
+    const result = await retrieveChunks(
+      input,
+      makeDeps({
+        keywordSearch: vi.fn(async () => []),
+        loadChunks: vi.fn(async () => [loaded("hi", HIGH), loaded("lo", LOW), loaded("zero", [0, 1, 0, 0])]),
+      }),
+      { minSimilarity: 0 },
+    );
+    expect(result.chunks.map((c) => c.id).sort()).toEqual(["hi", "lo", "zero"]);
+    expect(result.belowCutoff).toBe(0);
+  });
+
+  it("reports belowCutoff 0 in KEYWORD_ONLY and NONE modes", async () => {
+    const keywordOnly = await retrieveChunks(
+      input,
+      makeDeps({ embedQuery: vi.fn(async () => Promise.reject(new Error("x"))) }),
+    );
+    expect(keywordOnly.mode).toBe("KEYWORD_ONLY");
+    expect(keywordOnly.belowCutoff).toBe(0);
+    const none = await retrieveChunks(
+      input,
+      makeDeps({ keywordSearch: vi.fn(async () => Promise.reject(new Error("x"))) }),
+    );
+    expect(none.mode).toBe("NONE");
+    expect(none.belowCutoff).toBe(0);
+  });
+});

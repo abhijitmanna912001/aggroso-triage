@@ -105,6 +105,7 @@ async function main(): Promise<void> {
     console.log(`mode: ${result.mode}`);
     console.log(`queryText: ${result.queryText}`);
     console.log(`tsQuery: ${result.tsQuery}`);
+    console.log(`belowCutoff: ${result.belowCutoff}`);
     for (const warning of result.warnings) console.log(`[${warning.stage}] ${warning.message}`);
     for (const [i, chunk] of result.chunks.entries()) {
       const similarity = chunk.similarity === null ? "-" : chunk.similarity.toFixed(3);

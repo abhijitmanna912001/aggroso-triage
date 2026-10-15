@@ -5,7 +5,10 @@ import { reciprocalRankFusion } from "./fusion";
 import { GENERIC_QUERY_WORDS, buildRetrievalQuery, toTsQueryString, type RetrievalQueryInput } from "./query";
 import { rankBySimilarity } from "./similarity";
 
-export type RetrievalMode = "HYBRID" | "KEYWORD_ONLY" | "NONE";
+// Semantic matches scoring below this cosine similarity are not fused (keyword matches are unaffected).
+export const MIN_SIMILARITY = 0.4;
+
+export type RetrievalMode ="HYBRID" | "KEYWORD_ONLY" | "NONE";
 
 export type ChunkRow = {
   id: string;
@@ -34,6 +37,8 @@ export type RetrievalResult = {
   warnings: RetrievalWarning[];
   queryText: string;
   tsQuery: string;
+  // Ranked semantic items left out of fusion for scoring below minSimilarity.
+  belowCutoff: number;
 };
 
 export type RetrievalDeps = {
@@ -78,8 +83,9 @@ function toChunkRow(row: ChunkRow): ChunkRow {
 export async function retrieveChunks(
   input: RetrievalQueryInput,
   deps: RetrievalDeps,
-  options: { keywordLimit?: number; semanticLimit?: number; finalLimit?: number } = {},
+  options: { keywordLimit?: number; semanticLimit?: number; finalLimit?: number; minSimilarity?: number } = {},
 ): Promise<RetrievalResult> {
+  const minSimilarity = options.minSimilarity ?? MIN_SIMILARITY;
   const keywordLimit = options.keywordLimit ?? 8;
   const semanticLimit = options.semanticLimit ?? 8;
   const finalLimit = options.finalLimit ?? 6;
@@ -116,10 +122,11 @@ export async function retrieveChunks(
       stage: "keyword",
       message: `Keyword search failed (${describeError(keyword.reason)}); no manual sections were retrieved.`,
     });
-    return { mode: "NONE", chunks: [], warnings, queryText, tsQuery };
+    return { mode: "NONE", chunks: [], warnings, queryText, tsQuery, belowCutoff: 0 };
   }
 
   let mode: RetrievalMode;
+  let belowCutoff = 0;
   const lists = [{ name: "keyword", ids: keyword.value.map((row) => row.id) }];
   const semanticRows = new Map<string, ChunkRow>();
   const similarityById = new Map<string, number>();
@@ -139,7 +146,11 @@ export async function retrieveChunks(
   } else {
     mode = "HYBRID";
     const { ranked, skipped, chunks } = semantic.value;
-    lists.push({ name: "semantic", ids: ranked.map((item) => item.id) });
+    // A cutoff of 0 or less disables filtering, so it matches the behaviour before the cutoff existed.
+    const kept = minSimilarity <= 0 ? ranked : ranked.filter((item) => item.score >= minSimilarity);
+    belowCutoff = ranked.length - kept.length;
+    lists.push({ name: "semantic", ids: kept.map((item) => item.id) });
+    // Every ranked score is kept for reporting, so a chunk the keyword path found still shows its similarity.
     for (const item of ranked) similarityById.set(item.id, item.score);
     for (const row of chunks) semanticRows.set(row.id, row);
     if (skipped.length > 0) {
@@ -169,5 +180,5 @@ export async function retrieveChunks(
     warnings.push({ stage: "no_matches", message: "No manual sections matched this report." });
   }
 
-  return { mode, chunks, warnings, queryText, tsQuery };
+  return { mode, chunks, warnings, queryText, tsQuery, belowCutoff };
 }
