@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createReportAction } from "@/app/actions";
 import { FieldErrors, FormError } from "@/app/_components/form-messages";
@@ -34,15 +34,6 @@ const TIME_KEY = /^(event|reading)\.\d+\.(occurredAt|recordedAt)$/;
 
 const ROW = "rounded-md border border-line p-3";
 
-// Local time to UTC happens here, in the browser, because only the browser knows the user's time zone.
-async function submitReport(_previous: ActionResult | null, formData: FormData): Promise<ActionResult> {
-  const converted = new FormData();
-  for (const [key, value] of formData.entries()) {
-    converted.append(key, typeof value === "string" && TIME_KEY.test(key) ? toIsoWithOffset(value) : value);
-  }
-  return createReportAction(converted);
-}
-
 // Hint under the sensor select, built from the rule the form already has. High sensors alarm from the limit up,
 // low sensors at or below it.
 function describeRule(rule: FormRule): string {
@@ -61,7 +52,6 @@ function SectionHeading({ id, title, help }: Readonly<{ id: string; title: strin
 
 export function ReportForm({ equipment, rules }: Readonly<{ equipment: FormEquipment[]; rules: FormRules }>) {
   const router = useRouter();
-  const [state, formAction] = useActionState<ActionResult | null, FormData>(submitReport, null);
 
   const [equipmentId, setEquipmentId] = useState("");
   const [issue, setIssue] = useState("");
@@ -76,12 +66,34 @@ export function ReportForm({ equipment, rules }: Readonly<{ equipment: FormEquip
   const selected = equipment.find((e) => String(e.id) === equipmentId);
   const sensors = selected ? rules[selected.type] : [];
 
-  useEffect(() => {
-    // redirectTo comes from our own action, but only a site-relative path is ever followed.
-    if (state?.ok && state.redirectTo && state.redirectTo.startsWith("/") && !state.redirectTo.startsWith("//")) {
-      router.push(state.redirectTo);
+  function resetForm() {
+    setEquipmentId("");
+    setIssue("");
+    setEvents([]);
+    setReadings([]);
+    setSampleNote(null);
+    setLoadedSampleLabel(null);
+  }
+
+  // Navigation happens here, once, at the moment of the successful submit. It is not driven by an effect or by
+  // render: with Cache Components this route is kept hidden and its effects re-run when it is shown again, so a
+  // leftover success state would redirect again. On success the form is emptied and null is returned, so no success
+  // state is left behind either.
+  const [state, formAction] = useActionState<ActionResult | null, FormData>(async (_previous, formData) => {
+    // Local time to UTC happens here, in the browser, because only the browser knows the user's time zone.
+    const converted = new FormData();
+    for (const [key, value] of formData.entries()) {
+      converted.append(key, typeof value === "string" && TIME_KEY.test(key) ? toIsoWithOffset(value) : value);
     }
-  }, [state, router]);
+    const result = await createReportAction(converted);
+    // redirectTo comes from our own action, but only a site-relative path is ever followed.
+    if (result.ok && result.redirectTo && result.redirectTo.startsWith("/") && !result.redirectTo.startsWith("//")) {
+      resetForm();
+      router.push(result.redirectTo);
+      return null;
+    }
+    return result;
+  }, null);
 
   const fieldErrors = state && !state.ok ? state.fieldErrors : {};
   const hasFieldErrors = Object.keys(fieldErrors).length > 0;
