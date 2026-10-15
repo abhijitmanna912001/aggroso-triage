@@ -5,7 +5,8 @@ import { approveWorkOrderAction, editWorkOrderAction, rejectWorkOrderAction } fr
 import { FieldErrors } from "@/app/_components/form-messages";
 import { SubmitButton } from "@/app/_components/submit-button";
 import { WORK_ORDER_LIMITS } from "@/lib/reports/workorder";
-import { FormFooter, INPUT_CLASSES, SignInNotice, TextField, fieldErrorsOf, useActionForm } from "./form-parts";
+import { Select } from "@/app/_components/ui/field";
+import { FormFooter, SignInNotice, TextField, fieldErrorsOf, useActionForm } from "./form-parts";
 
 const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 
@@ -62,12 +63,12 @@ export function EditWorkOrderForm({
           <label htmlFor="wo-priority" className="block text-sm font-medium">
             Priority
           </label>
-          <select
+          <Select
             id="wo-priority"
             name="priority"
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
-            className={INPUT_CLASSES}
+            wrapperClassName="mt-1"
             aria-invalid={priorityErrors !== undefined && priorityErrors.length > 0}
             aria-describedby={priorityErrors ? "wo-priority-errors" : undefined}
           >
@@ -76,7 +77,7 @@ export function EditWorkOrderForm({
                 {p}
               </option>
             ))}
-          </select>
+          </Select>
           <FieldErrors id="wo-priority-errors" errors={priorityErrors} />
         </div>
         <p className="text-sm text-muted">

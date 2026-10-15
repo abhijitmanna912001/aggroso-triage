@@ -46,7 +46,7 @@ async function Workspace({ params }: { params: Promise<{ id: string }> }) {
         </aside>
 
         <Card className="lg:col-span-2">
-          <h2 className="mb-2">Issue</h2>
+          <h2 className="mb-2 font-semibold">Issue</h2>
           <p className="max-w-prose whitespace-pre-wrap">{ws.report.issue}</p>
         </Card>
 

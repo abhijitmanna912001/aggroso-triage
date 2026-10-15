@@ -8,7 +8,7 @@ export function WorkOrderSummary({ workOrder }: { workOrder: Workspace["workOrde
   const latest = workOrder?.versions[0] ?? null;
   return (
     <Card as="section" aria-labelledby="work-order-summary-heading" className="space-y-3 text-sm">
-      <h2 id="work-order-summary-heading" className="text-base">
+      <h2 id="work-order-summary-heading" className="text-base font-semibold">
         Work order
       </h2>
       {workOrder === null || latest === null ? (

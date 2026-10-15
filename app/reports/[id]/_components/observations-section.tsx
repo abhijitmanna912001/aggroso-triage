@@ -29,7 +29,7 @@ export function ObservationsSection({
 
       <div className="space-y-6">
         <div className="space-y-2">
-          <h3>Recent events</h3>
+          <h3 className="font-semibold">Recent events</h3>
           {events.length === 0 ? (
             <p className={MUTED}>No events were reported.</p>
           ) : (
@@ -48,7 +48,7 @@ export function ObservationsSection({
         </div>
 
         <div className="space-y-2">
-          <h3>Sensor readings</h3>
+          <h3 className="font-semibold">Sensor readings</h3>
           {readings.length === 0 ? (
             <p className={MUTED}>No sensor readings were provided.</p>
           ) : (
@@ -81,13 +81,13 @@ export function ObservationsSection({
         </div>
 
         <div className="space-y-2">
-          <h3>Threshold checks</h3>
+          <h3 className="font-semibold">Threshold checks</h3>
           <p className={MUTED}>Computed by fixed rules in code, not by the AI.</p>
           <ThresholdsTable thresholds={thresholds} />
         </div>
 
         <div className="space-y-2">
-          <h3>Technician observations</h3>
+          <h3 className="font-semibold">Technician observations</h3>
           {observations.length === 0 ? (
             <p className={MUTED}>No observations have been added by technicians.</p>
           ) : (

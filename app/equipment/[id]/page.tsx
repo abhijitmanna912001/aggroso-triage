@@ -50,7 +50,7 @@ async function EquipmentHistory({ params }: { params: Promise<{ id: string }> })
 
       <section aria-labelledby="reported-issues">
         <Card>
-          <h2 id="reported-issues" className="mb-3">
+          <h2 id="reported-issues" className="mb-3 font-semibold">
             Reported issues
           </h2>
           {reports.length === 0 ? (
@@ -118,7 +118,7 @@ async function EquipmentHistory({ params }: { params: Promise<{ id: string }> })
 
       <section aria-labelledby="maintenance-history" className="mt-6">
         <Card>
-          <h2 id="maintenance-history" className="mb-3">
+          <h2 id="maintenance-history" className="mb-3 font-semibold">
             Maintenance history
           </h2>
           {entries.length === 0 ? (

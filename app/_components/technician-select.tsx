@@ -57,6 +57,7 @@ export function TechnicianSelect({ current }: { current: string | null }) {
           aria-invalid={nameErrors ? true : undefined}
           aria-describedby={nameErrors ? ERROR_ID : undefined}
           className="w-auto!"
+          wrapperClassName="inline-block"
         >
           <option value="" disabled>
             Choose…

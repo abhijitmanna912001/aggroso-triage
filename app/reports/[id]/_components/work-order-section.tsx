@@ -78,7 +78,7 @@ export function WorkOrderSection({
               <WorkOrderStatusBadge status={workOrder.status} />
               <PriorityBadge priority={latest.priority} />
             </div>
-            <h3 className="mt-3 whitespace-pre-wrap">{latest.title}</h3>
+            <h3 className="mt-3 font-semibold whitespace-pre-wrap">{latest.title}</h3>
             <p className="mt-1 text-muted">
               Version {latest.versionNumber}, written by {versionAuthor(latest)} · {formatUtc(latest.createdAt)}
             </p>

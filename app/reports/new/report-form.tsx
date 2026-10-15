@@ -53,7 +53,7 @@ function describeRule(rule: FormRule): string {
 function SectionHeading({ id, title, help }: { id: string; title: string; help: string }) {
   return (
     <div className="mb-4 space-y-1">
-      <h2 id={id}>{title}</h2>
+      <h2 id={id} className="font-semibold">{title}</h2>
       <p className="text-sm text-muted">{help}</p>
     </div>
   );

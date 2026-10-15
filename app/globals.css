@@ -68,6 +68,15 @@ body {
 }
 
 @layer base {
+  /* Tailwind's preflight resets borders to currentColor. Default to the subtle line token instead. */
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--line);
+  }
+
   html {
     scroll-padding-top: 5rem;
     scroll-behavior: smooth;

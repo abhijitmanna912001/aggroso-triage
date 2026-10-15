@@ -44,7 +44,7 @@ export function SectionHeader({
   return (
     <div className="mb-4 space-y-1">
       <div className="flex flex-wrap items-center gap-2">
-        <h2 id={id}>{title}</h2>
+        <h2 id={id} className="font-semibold">{title}</h2>
         {count === undefined ? null : (
           <Badge tone="neutral">
             {count}

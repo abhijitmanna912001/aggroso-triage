@@ -4,7 +4,8 @@ import { useState } from "react";
 import { confirmFindingAction } from "@/app/actions";
 import { SubmitButton } from "@/app/_components/submit-button";
 import { NOTE_LIMITS } from "@/lib/reports/notes";
-import { FormFooter, INPUT_CLASSES, SignInNotice, TextField, fieldErrorsOf, useActionForm } from "./form-parts";
+import { Select } from "@/app/_components/ui/field";
+import { FormFooter, SignInNotice, TextField, fieldErrorsOf, useActionForm } from "./form-parts";
 import { FieldErrors } from "@/app/_components/form-messages";
 
 function shorten(text: string, max: number): string {
@@ -48,12 +49,12 @@ export function FindingForm({
           <label htmlFor="finding-cause" className="block text-sm font-medium">
             Related possible cause (optional)
           </label>
-          <select
+          <Select
             id="finding-cause"
             name="hypothesisId"
             value={hypothesisId}
             onChange={(e) => setHypothesisId(e.target.value)}
-            className={INPUT_CLASSES}
+            wrapperClassName="mt-1"
             aria-invalid={causeErrors !== undefined && causeErrors.length > 0}
             aria-describedby={causeErrors ? "finding-cause-errors" : undefined}
           >
@@ -63,7 +64,7 @@ export function FindingForm({
                 {shorten(h.cause, 80)}
               </option>
             ))}
-          </select>
+          </Select>
           <FieldErrors id="finding-cause-errors" errors={causeErrors} />
         </div>
         <p className="text-sm text-muted">A finding is confirmed by you, not by the AI.</p>

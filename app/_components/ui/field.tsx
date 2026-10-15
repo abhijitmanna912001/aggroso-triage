@@ -1,6 +1,6 @@
 import type { ComponentProps, ReactNode } from "react";
 import { controlClasses } from "@/lib/ui/classes";
-import { X } from "./icons";
+import { ChevronDown, X } from "./icons";
 
 export type ControlProps = {
   id: string;
@@ -59,6 +59,16 @@ export function Textarea({ className, ...rest }: ComponentProps<"textarea">) {
   return <textarea className={join(className)} {...rest} />;
 }
 
-export function Select({ className, ...rest }: ComponentProps<"select">) {
-  return <select className={join(className)} {...rest} />;
+// The native arrow is hidden so the chevron can sit inside the padding instead of touching the border.
+export function Select({
+  className,
+  wrapperClassName,
+  ...rest
+}: ComponentProps<"select"> & { wrapperClassName?: string }) {
+  return (
+    <div className={`relative ${wrapperClassName ?? ""}`.trim()}>
+      <select className={`${join(className)} appearance-none pr-10`} {...rest} />
+      <ChevronDown className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-muted" />
+    </div>
+  );
 }

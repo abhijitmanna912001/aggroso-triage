@@ -32,6 +32,14 @@ export function Check(props: IconProps) {
   );
 }
 
+export function ChevronDown(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="m4 6 4 4 4-4" />
+    </Icon>
+  );
+}
+
 export function X(props: IconProps) {
   return (
     <Icon {...props}>
