@@ -91,4 +91,28 @@ lib/retrieval/   similarity, rank fusion, query building, orchestration
 lib/analysis/    prompt, schema, validation, runner, persistence, budget
 lib/reports/     report, work order and notes services
 lib/server/      queries, session, wiring (server-only)
-lib/ui/          pure
+lib/ui/          pure UI helpers and class builders
+knowledge/       the sample equipment manuals (markdown)
+prisma/          schema and migrations
+scripts/         seed, retrieve and analyze scripts
+tests/
+```
+
+## Scope
+**Implemented:** report form, deterministic checks, retrieval over a knowledge base, cited AI suggestions with follow-up questions and a draft work order, edit/approve/reject, observation vs possible cause vs confirmed finding, equipment history, missing and conflicting data handling, and visible AI and retrieval failures, with loading, empty, validation, success and failure states.
+
+**Excluded:** live IoT integration, predictive maintenance models, inventory, technician dispatch, real authentication, a "close report" action, managing equipment or manuals in the UI, pgvector, and end-to-end browser tests.
+
+## Known limitations
+- **The manuals are sample documents** written for this assessment, not manufacturer data. Sensor limits are illustrative; the vibration bands follow commonly used severity zones but were not checked against a standard.
+- **Identity is a chosen name in a cookie**, not authentication. It records who did what, and does not prove who someone is.
+- Analysis takes roughly 5 to 30 seconds. The first request after the database has been idle can take a few seconds more while it resumes.
+- Model output varies from run to run. The deterministic rules and validation bound it; the wording and sometimes the priority above the minimum differ.
+- The retrieval relevance cutoff (0.40) was chosen from five test queries and is a heuristic.
+- Embedding similarity is computed in Node over about a dozen sections per equipment type. pgvector is the upgrade path for a larger knowledge base.
+- The analysis budget check is not atomic: two requests started within the same few seconds can both pass it.
+- The concurrency tests prove the logic and the rollback with fakes; they do not exercise real Postgres row locking between two connections.
+- Under Cache Components, an unknown report or equipment id can be served as a "not found" page with HTTP 200.
+- `npm audit` reports high-severity advisories (4 in production dependencies, 9 including development ones), all inside the Prisma CLI's own dependency tree and not in the runtime request path. The only offered fix downgrades Prisma to v6, so I left it. Prisma is pinned at 7.10.0 because Prisma 8 was still a release candidate.
+- Static analysis: ESLint and the TypeScript checks run clean, and two guard tests check Tailwind v4 class names and design tokens. SonarQube for IDE still shows maintainability warnings (cognitive complexity, repeated literals) in some files. I fixed the low-risk ones in an audit pass and did not refactor the tested core logic close to the deadline.
+- The seed and scripts use the direct database URL, which still produces a driver warning about `sslmode`.
