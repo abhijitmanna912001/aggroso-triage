@@ -184,6 +184,11 @@ async function main(): Promise<void> {
     section("Priority");
     console.log(`priority: ${a.priority}`);
     console.log(`priorityRaisedByFloor: ${validated.priorityRaisedByFloor}`);
+    console.log(`rationale: ${a.priorityRationale}`);
+
+    section("Draft work order");
+    console.log(`title: ${a.draftWorkOrder.title}`);
+    console.log(`description: ${a.draftWorkOrder.description}`);
 
     section("Dropped items and notes");
     for (const d of validated.dropped) console.log(`dropped ${d.kind} #${d.index}: ${d.reason}`);

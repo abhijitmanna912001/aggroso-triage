@@ -7,7 +7,8 @@ import { AnalysisConfigError, type ModelCallResult } from "./run";
 import { analysisOutputSchema } from "./schema";
 
 export const DEFAULT_MODEL = "gpt-6-luna";
-export const ANALYSIS_TIMEOUT_MS = 30_000;
+// Live calls took about 20 seconds; Vercel Hobby functions can run up to 300 seconds.
+export const ANALYSIS_TIMEOUT_MS = 60_000;
 export const MAX_OUTPUT_TOKENS = 6000;
 
 export function readOpenAiConfig(env: Record<string, string | undefined>): { apiKey: string; model: string } {
@@ -36,7 +37,7 @@ export type OpenAiLike = {
   };
 };
 
-// No retries: a retry would double the wait on a request that already has a 30 second timeout.
+// No retries: a retry would double the wait on a request that already has a 60 second timeout.
 export function createOpenAiClient(apiKey: string): OpenAiLike {
   return new OpenAI({ apiKey, timeout: ANALYSIS_TIMEOUT_MS, maxRetries: 0 });
 }

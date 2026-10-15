@@ -73,6 +73,11 @@ describe("buildAnalysisPrompt", () => {
     expect(instructions).toContain("Threshold results may be cited as additional evidence");
     expect(instructions).toContain("Follow-up questions may cite threshold results alone");
     expect(instructions).toContain("Do not invent manual content, limits, part numbers or procedures");
+    expect(instructions).toContain("means no reading was provided");
+    expect(instructions).toContain(
+      "Never propose a possible cause or inspection step on the assumption that a missing value is abnormal",
+    );
+    expect(instructions).toContain("ask which reading to trust");
     expect(instructions).toContain("isolate and lock out");
     expect(instructions).toContain("Never describe remote control of equipment");
     expect(instructions).toContain("must not be below the stated minimum priority");

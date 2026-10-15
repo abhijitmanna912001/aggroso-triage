@@ -47,7 +47,7 @@ describe("readOpenAiConfig", () => {
 
   it("has the documented constants", () => {
     expect(DEFAULT_MODEL).toBe("gpt-6-luna");
-    expect(ANALYSIS_TIMEOUT_MS).toBe(30_000);
+    expect(ANALYSIS_TIMEOUT_MS).toBe(60_000);
     expect(MAX_OUTPUT_TOKENS).toBe(6000);
   });
 });
