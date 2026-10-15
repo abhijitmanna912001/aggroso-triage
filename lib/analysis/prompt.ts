@@ -25,6 +25,7 @@ export type AnalysisPrompt = {
   instructions: string;
   userInput: string;
   allowed: AllowedCitations;
+  missingThresholdIds: string[];
 };
 
 export const ANALYSIS_INSTRUCTIONS = [
@@ -96,5 +97,6 @@ export function buildAnalysisPrompt(input: AnalysisPromptInput): AnalysisPrompt 
       event: input.events.map((e) => String(e.id)),
       threshold: input.thresholds.map((t) => t.ruleId),
     },
+    missingThresholdIds: input.thresholds.filter((t) => t.status === "MISSING").map((t) => t.ruleId),
   };
 }

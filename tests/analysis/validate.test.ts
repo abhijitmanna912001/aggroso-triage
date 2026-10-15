@@ -20,13 +20,13 @@ function makeOutput(overrides: Partial<AnalysisOutput> = {}): AnalysisOutput {
     inspectionSteps: [{ instruction: "Isolate and lock out, then inspect.", citations: [manual] }],
     proposedPriority: "MEDIUM",
     priorityRationale: "Moderate",
-    draftWorkOrder: { title: "Inspect pump", description: "Check it." },
+    draftWorkOrder: { title: "Inspect pump" },
     limitations: ["None known"],
     ...overrides,
   };
 }
 
-const none = { priorityFloor: null } as const;
+const none = { priorityFloor: null, missingThresholdIds: [] as string[], equipmentTag: "P-101" } as const;
 
 describe("validateAnalysis citations", () => {
   it("keeps everything when all citations are valid", () => {
@@ -154,7 +154,7 @@ describe("validateAnalysis text and caps", () => {
       followUpQuestions: [{ question: "", citations: [event] }],
       inspectionSteps: [{ instruction: "\n\t", citations: [manual] }],
       priorityRationale: "  reason  ",
-      draftWorkOrder: { title: "  T  ", description: "  D  " },
+      draftWorkOrder: { title: "  T  " },
       limitations: ["  a  ", "   "],
     });
     const result = validateAnalysis(output, allowed, none);
@@ -167,7 +167,7 @@ describe("validateAnalysis text and caps", () => {
       { cause: "Possible leak", rationale: "why", confidence: "LOW", citations: [manual] },
     ]);
     expect(result.accepted.priorityRationale).toBe("reason");
-    expect(result.accepted.draftWorkOrder).toEqual({ title: "T", description: "D" });
+    expect(result.accepted.draftWorkOrder.title).toBe("T");
     expect(result.accepted.limitations).toEqual(["a"]);
   });
 
@@ -206,25 +206,25 @@ describe("validateAnalysis text and caps", () => {
 
 describe("validateAnalysis priority", () => {
   it("raises LOW to HIGH under a HIGH floor", () => {
-    const result = validateAnalysis(makeOutput({ proposedPriority: "LOW" }), allowed, { priorityFloor: "HIGH" });
+    const result = validateAnalysis(makeOutput({ proposedPriority: "LOW" }), allowed, { ...none, priorityFloor: "HIGH" });
     expect(result.accepted.priority).toBe("HIGH");
     expect(result.priorityRaisedByFloor).toBe(true);
   });
 
   it("raises MEDIUM to URGENT under an URGENT floor", () => {
-    const result = validateAnalysis(makeOutput({ proposedPriority: "MEDIUM" }), allowed, { priorityFloor: "URGENT" });
+    const result = validateAnalysis(makeOutput({ proposedPriority: "MEDIUM" }), allowed, { ...none, priorityFloor: "URGENT" });
     expect(result.accepted.priority).toBe("URGENT");
     expect(result.priorityRaisedByFloor).toBe(true);
   });
 
   it("keeps a higher model priority and does not report a raise", () => {
-    const result = validateAnalysis(makeOutput({ proposedPriority: "URGENT" }), allowed, { priorityFloor: "HIGH" });
+    const result = validateAnalysis(makeOutput({ proposedPriority: "URGENT" }), allowed, { ...none, priorityFloor: "HIGH" });
     expect(result.accepted.priority).toBe("URGENT");
     expect(result.priorityRaisedByFloor).toBe(false);
   });
 
   it("does not report a raise when the model already equals the floor", () => {
-    const result = validateAnalysis(makeOutput({ proposedPriority: "HIGH" }), allowed, { priorityFloor: "HIGH" });
+    const result = validateAnalysis(makeOutput({ proposedPriority: "HIGH" }), allowed, { ...none, priorityFloor: "HIGH" });
     expect(result.accepted.priority).toBe("HIGH");
     expect(result.priorityRaisedByFloor).toBe(false);
   });
@@ -233,6 +233,99 @@ describe("validateAnalysis priority", () => {
     for (const priority of ["LOW", "MEDIUM", "HIGH", "URGENT"] as const) {
       expect(validateAnalysis(makeOutput({ proposedPriority: priority }), allowed, none).accepted.priority).toBe(priority);
     }
+  });
+});
+
+describe("validateAnalysis missing readings", () => {
+  const missing = { ...none, missingThresholdIds: ["PUMP.vibration"] };
+
+  it("drops a hypothesis citing a missing reading even with a valid manual citation", () => {
+    const output = makeOutput({
+      hypotheses: [{ cause: "Bearing wear", rationale: "r", confidence: "HIGH", citations: [threshold, manual] }],
+    });
+    const result = validateAnalysis(output, allowed, missing);
+    expect(result.accepted.hypotheses).toEqual([]);
+    expect(result.dropped).toEqual([{ kind: "hypothesis", index: 0, reason: "cites a missing reading" }]);
+  });
+
+  it("keeps a step and a question that cite a missing reading", () => {
+    const output = makeOutput({
+      followUpQuestions: [{ question: "Is the sensor connected?", citations: [threshold] }],
+      inspectionSteps: [{ instruction: "Isolate and lock out, then check the sensor.", citations: [threshold, manual] }],
+    });
+    const result = validateAnalysis(output, allowed, missing);
+    expect(result.accepted.followUpQuestions).toHaveLength(1);
+    expect(result.accepted.inspectionSteps).toHaveLength(1);
+    expect(result.dropped).toEqual([]);
+  });
+
+  it("keeps a hypothesis citing a non-missing threshold plus a manual section", () => {
+    const output = makeOutput({
+      hypotheses: [{ cause: "Bearing wear", rationale: "r", confidence: "LOW", citations: [threshold, manual] }],
+    });
+    // CONFLICTING and OK thresholds are simply not in missingThresholdIds.
+    const result = validateAnalysis(output, allowed, { ...none, missingThresholdIds: ["PUMP.temp"] });
+    expect(result.accepted.hypotheses).toHaveLength(1);
+    expect(result.dropped).toEqual([]);
+  });
+});
+
+describe("validateAnalysis draft work order", () => {
+  it("falls back to a title built from the equipment tag", () => {
+    const result = validateAnalysis(makeOutput({ draftWorkOrder: { title: "  " } }), allowed, none);
+    expect(result.accepted.draftWorkOrder.title).toBe("P-101: maintenance inspection");
+  });
+
+  it("composes sections in order with numbering, bullets and blank lines", () => {
+    const output = makeOutput({
+      hypotheses: [{ cause: "Possible bearing wear", rationale: "SECRET RATIONALE", confidence: "MEDIUM", citations: [manual] }],
+      followUpQuestions: [{ question: "When was it lubricated?", citations: [event] }],
+      inspectionSteps: [
+        { instruction: "Isolate and lock out.", citations: [manual] },
+        { instruction: "Inspect the bearing.", citations: [manual] },
+      ],
+      limitations: ["No lubrication log"],
+    });
+    const { description } = validateAnalysis(output, allowed, none).accepted.draftWorkOrder;
+    expect(description).toBe(
+      [
+        "Inspection steps:\n1. Isolate and lock out.\n2. Inspect the bearing.",
+        "Open questions:\n- When was it lubricated?",
+        "Possible causes under review (not confirmed):\n- Possible bearing wear (medium confidence)",
+        "Limitations:\n- No lubrication log",
+      ].join("\n\n"),
+    );
+    expect(description).not.toContain("SECRET RATIONALE");
+  });
+
+  it("omits empty sections and uses the no-cause line when no hypothesis is accepted", () => {
+    const output = makeOutput({
+      hypotheses: [],
+      followUpQuestions: [],
+      inspectionSteps: [{ instruction: "Look.", citations: [manual] }],
+      limitations: [],
+    });
+    const { description } = validateAnalysis(output, allowed, none).accepted.draftWorkOrder;
+    expect(description).toBe(
+      "Inspection steps:\n1. Look.\n\nNo possible cause could be proposed from the available evidence.",
+    );
+    expect(description).not.toContain("Open questions:");
+    expect(description).not.toContain("Limitations:");
+    expect(description).not.toContain("Possible causes");
+  });
+
+  it("never contains the text of a dropped hypothesis", () => {
+    const output = makeOutput({
+      hypotheses: [
+        { cause: "DROPPED MISSING CAUSE", rationale: "DROPPED RATIONALE", confidence: "HIGH", citations: [threshold, manual] },
+        { cause: "DROPPED INVALID CAUSE", rationale: "r", confidence: "HIGH", citations: [{ type: "manual", id: "nope" }] },
+      ],
+    });
+    const result = validateAnalysis(output, allowed, { ...none, missingThresholdIds: ["PUMP.vibration"] });
+    expect(result.dropped).toHaveLength(2);
+    const { title, description } = result.accepted.draftWorkOrder;
+    expect(`${title}\n${description}`).not.toContain("DROPPED");
+    expect(description).toContain("No possible cause could be proposed");
   });
 });
 
@@ -247,7 +340,7 @@ describe("validateAnalysis purity", () => {
     });
     const allowedCopy = structuredClone(allowed);
     const before = structuredClone(output);
-    validateAnalysis(output, allowed, { priorityFloor: "URGENT" });
+    validateAnalysis(output, allowed, { ...none, priorityFloor: "URGENT" });
     expect(output).toEqual(before);
     expect(allowed).toEqual(allowedCopy);
   });

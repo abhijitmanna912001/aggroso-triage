@@ -56,10 +56,7 @@ export const analysisOutputSchema = z.object({
     .describe("Proposed priority. Must not be below the stated minimum priority."),
   priorityRationale: z.string().describe("Short reason for the proposed priority."),
   draftWorkOrder: z.object({
-    title: z.string().describe("Short work order title."),
-    description: z
-      .string()
-      .describe("Work order description for a technician to review. Causes remain possibilities."),
+    title: z.string().describe("Short work order title. Do not name causes."),
   }),
   limitations: z
     .array(z.string())

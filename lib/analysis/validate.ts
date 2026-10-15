@@ -17,7 +17,7 @@ export type ValidatedAnalysis = {
     inspectionSteps: AnalysisOutput["inspectionSteps"];
     priority: PriorityValue;
     priorityRationale: string;
-    draftWorkOrder: AnalysisOutput["draftWorkOrder"];
+    draftWorkOrder: { title: string; description: string };
     limitations: string[];
   };
   dropped: DroppedItem[];
@@ -41,10 +41,46 @@ function cleanCitations(citations: Citation[], allowed: AllowedCitations): Citat
   return kept;
 }
 
+export const NO_CAUSE_LINE = "No possible cause could be proposed from the available evidence.";
+
+// The description is built only from accepted items, so no other model text (and nothing dropped) can reach it.
+function composeDescription(accepted: {
+  steps: string[];
+  questions: string[];
+  causes: { cause: string; confidence: string }[];
+  limitations: string[];
+}): string {
+  const sections: string[] = [];
+  if (accepted.steps.length > 0) {
+    sections.push(["Inspection steps:", ...accepted.steps.map((s, i) => `${i + 1}. ${s}`)].join("\n"));
+  }
+  if (accepted.questions.length > 0) {
+    sections.push(["Open questions:", ...accepted.questions.map((q) => `- ${q}`)].join("\n"));
+  }
+  if (accepted.causes.length > 0) {
+    sections.push(
+      [
+        "Possible causes under review (not confirmed):",
+        ...accepted.causes.map((c) => `- ${c.cause} (${c.confidence.toLowerCase()} confidence)`),
+      ].join("\n"),
+    );
+  } else {
+    sections.push(NO_CAUSE_LINE);
+  }
+  if (accepted.limitations.length > 0) {
+    sections.push(["Limitations:", ...accepted.limitations.map((l) => `- ${l}`)].join("\n"));
+  }
+  return sections.join("\n\n");
+}
+
 export function validateAnalysis(
   output: AnalysisOutput,
   allowed: AllowedCitations,
-  options: { priorityFloor: "HIGH" | "URGENT" | null },
+  options: {
+    priorityFloor: "HIGH" | "URGENT" | null;
+    missingThresholdIds: readonly string[];
+    equipmentTag: string;
+  },
 ): ValidatedAnalysis {
   const dropped: DroppedItem[] = [];
   const notes: string[] = [];
@@ -56,12 +92,21 @@ export function validateAnalysis(
     textOf: (item: T) => string,
     rebuild: (item: T, citations: Citation[]) => T,
     requireEvidence: boolean,
+    dropOnMissingReading = false,
   ): T[] {
     const accepted: T[] = [];
     items.forEach((item, index) => {
       const label = `${kind} ${index + 1}`;
       if (textOf(item).trim() === "") {
         dropped.push({ kind, index, reason: "empty text" });
+        return;
+      }
+      // Checked on the original citations: a cause must not rest on a reading nobody provided.
+      if (
+        dropOnMissingReading &&
+        item.citations.some((c) => c.type === "threshold" && options.missingThresholdIds.includes(c.id))
+      ) {
+        dropped.push({ kind, index, reason: "cites a missing reading" });
         return;
       }
       const citations = cleanCitations(item.citations, allowed);
@@ -99,6 +144,7 @@ export function validateAnalysis(
         citations,
       }),
       true,
+      true,
     ),
     ANALYSIS_LIMITS.hypotheses,
     "hypotheses",
@@ -128,6 +174,9 @@ export function validateAnalysis(
     "inspection steps",
   );
 
+  const limitations = output.limitations.map((l) => l.trim()).filter((l) => l !== "");
+  const title = output.draftWorkOrder.title.trim() || `${options.equipmentTag}: maintenance inspection`;
+
   const floor = options.priorityFloor;
   const raised = floor !== null && PRIORITY_RANK[floor] > PRIORITY_RANK[output.proposedPriority];
 
@@ -139,10 +188,15 @@ export function validateAnalysis(
       priority: raised ? floor : output.proposedPriority,
       priorityRationale: output.priorityRationale.trim(),
       draftWorkOrder: {
-        title: output.draftWorkOrder.title.trim(),
-        description: output.draftWorkOrder.description.trim(),
+        title,
+        description: composeDescription({
+          steps: inspectionSteps.map((s) => s.instruction),
+          questions: followUpQuestions.map((q) => q.question),
+          causes: hypotheses.map((h) => ({ cause: h.cause, confidence: h.confidence })),
+          limitations,
+        }),
       },
-      limitations: output.limitations.map((l) => l.trim()).filter((l) => l !== ""),
+      limitations,
     },
     dropped,
     notes,

@@ -57,6 +57,15 @@ describe("buildAnalysisPrompt", () => {
     });
   });
 
+  it("lists only the rule ids of MISSING thresholds in missingThresholdIds", () => {
+    const missing: ThresholdEvaluation = { ...threshold, status: "MISSING", ruleId: "PUMP.temp", observedValue: null };
+    const conflicting: ThresholdEvaluation = { ...threshold, status: "CONFLICTING", ruleId: "PUMP.pressure" };
+    expect(buildAnalysisPrompt(makeInput()).missingThresholdIds).toEqual([]);
+    expect(
+      buildAnalysisPrompt(makeInput({ thresholds: [threshold, missing, conflicting] })).missingThresholdIds,
+    ).toEqual(["PUMP.temp"]);
+  });
+
   it("says so when no manual sections were retrieved", () => {
     const { userInput, allowed } = buildAnalysisPrompt(makeInput({ chunks: [] }));
     expect(userInput).toContain("No manual sections were retrieved.");

@@ -188,7 +188,8 @@ async function main(): Promise<void> {
 
     section("Draft work order");
     console.log(`title: ${a.draftWorkOrder.title}`);
-    console.log(`description: ${a.draftWorkOrder.description}`);
+    console.log("description:");
+    console.log(a.draftWorkOrder.description);
 
     section("Dropped items and notes");
     for (const d of validated.dropped) console.log(`dropped ${d.kind} #${d.index}: ${d.reason}`);

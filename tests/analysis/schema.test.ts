@@ -20,7 +20,7 @@ const validSample = {
   ],
   proposedPriority: "HIGH",
   priorityRationale: "Critical vibration",
-  draftWorkOrder: { title: "Inspect pump bearing", description: "Check bearing condition." },
+  draftWorkOrder: { title: "Inspect pump bearing" },
   limitations: ["No lubrication log provided"],
 };
 
@@ -66,6 +66,10 @@ describe("analysisOutputSchema", () => {
     walk(root, (n) => {
       for (const key of banned) expect(n).not.toHaveProperty(key);
     });
+  });
+
+  it("draftWorkOrder has only a title, no description", () => {
+    expect(Object.keys(root.properties?.draftWorkOrder.properties ?? {})).toEqual(["title"]);
   });
 
   it("parses a valid sample", () => {

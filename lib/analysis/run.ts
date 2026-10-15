@@ -122,7 +122,11 @@ export async function runAnalysis(input: AnalysisRunInput, deps: AnalysisDeps): 
       );
     }
 
-    const validated = validateAnalysis(parsed.data, allowed, { priorityFloor: input.priorityFloor });
+    const validated = validateAnalysis(parsed.data, allowed, {
+      priorityFloor: input.priorityFloor,
+      missingThresholdIds: prompt.missingThresholdIds,
+      equipmentTag: input.equipment.tag,
+    });
 
     const degradedReasons: string[] = [];
     if (input.retrievalMode === "KEYWORD_ONLY") degradedReasons.push("keyword-only retrieval");

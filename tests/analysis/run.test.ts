@@ -50,7 +50,7 @@ function makeOutput(overrides: Partial<AnalysisOutput> = {}): AnalysisOutput {
     ],
     proposedPriority: "MEDIUM",
     priorityRationale: "Moderate",
-    draftWorkOrder: { title: "Inspect pump", description: "Check it." },
+    draftWorkOrder: { title: "Inspect pump" },
     limitations: [],
     ...overrides,
   };
@@ -224,6 +224,40 @@ describe("runAnalysis DEGRADED", () => {
     expect(result.status).toBe("DEGRADED");
     expect(result.degradedReasons).toContain("1 item(s) dropped");
     expect(result.degradedReasons).toContain("1 citation note(s)");
+  });
+
+  it("is DEGRADED when the model proposes a cause citing a missing reading, and the cause stays out of the work order", async () => {
+    const missingThreshold: ThresholdEvaluation = {
+      ...threshold,
+      status: "MISSING",
+      observedValue: null,
+      message: "vibration reading missing",
+    };
+    const output = makeOutput({
+      hypotheses: [
+        {
+          cause: "Imaginary impeller damage",
+          rationale: "Assumed high vibration",
+          confidence: "HIGH",
+          citations: [
+            { type: "threshold", id: "PUMP.vibration" },
+            { type: "manual", id: "pump-4-2" },
+          ],
+        },
+      ],
+    });
+    const result = await runAnalysis(
+      makeInput({ thresholds: [missingThreshold] }),
+      makeDeps(async () => completed(output)),
+    );
+    expect(result.status).toBe("DEGRADED");
+    expect(result.degradedReasons).toContain("1 item(s) dropped");
+    expect(result.validated?.dropped).toEqual([
+      { kind: "hypothesis", index: 0, reason: "cites a missing reading" },
+    ]);
+    const draft = result.validated?.accepted.draftWorkOrder;
+    expect(JSON.stringify(draft)).not.toContain("Imaginary impeller damage");
+    expect(draft?.description).toContain("No possible cause could be proposed");
   });
 
   it("is DEGRADED when no hypothesis survives", async () => {
