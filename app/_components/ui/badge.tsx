@@ -7,12 +7,12 @@ export function Badge({
   icon,
   className,
   children,
-}: {
+}: Readonly<{
   tone: Tone;
   icon?: ReactNode;
   className?: string;
   children: ReactNode;
-}) {
+}>) {
   return (
     <span
       className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-medium ${toneClasses(tone)} ${className ?? ""}`.trim()}

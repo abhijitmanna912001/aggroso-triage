@@ -2,7 +2,7 @@ import { Alert } from "./ui/alert";
 import { X } from "./ui/icons";
 
 // Server messages are fixed text (see lib/server/action-result.ts), so they are safe to show as they are.
-export function FormError({ id, message }: { id?: string; message: string | null | undefined }) {
+export function FormError({ id, message }: Readonly<{ id?: string; message: string | null | undefined }>) {
   if (!message) return null;
   return (
     <Alert id={id} tone="danger">
@@ -11,7 +11,7 @@ export function FormError({ id, message }: { id?: string; message: string | null
   );
 }
 
-export function FieldErrors({ id, errors }: { id: string; errors: string[] | undefined }) {
+export function FieldErrors({ id, errors }: Readonly<{ id: string; errors: string[] | undefined }>) {
   if (!errors || errors.length === 0) return null;
   return (
     <ul id={id} className="mt-1 space-y-0.5 text-sm text-danger">

@@ -11,7 +11,7 @@ export function Button({
   type = "button",
   className,
   ...rest
-}: StyleProps & ComponentProps<"button">) {
+}: Readonly<StyleProps & ComponentProps<"button">>) {
   const classes = `${buttonClasses({ variant, size, fullWidth })} ${className ?? ""}`.trim();
   return <button type={type} className={classes} {...rest} />;
 }
@@ -22,7 +22,7 @@ export function LinkButton({
   fullWidth,
   className,
   ...rest
-}: StyleProps & ComponentProps<typeof Link>) {
+}: Readonly<StyleProps & ComponentProps<typeof Link>>) {
   const classes = `${buttonClasses({ variant, size, fullWidth })} ${className ?? ""}`.trim();
   return <Link className={classes} {...rest} />;
 }

@@ -33,7 +33,7 @@ export function fieldErrorsOf(state: ActionResult | null, name: string): string[
   return state && !state.ok ? state.fieldErrors[name] : undefined;
 }
 
-export function SignInNotice({ id }: { id: string }) {
+export function SignInNotice({ id }: Readonly<{ id: string }>) {
   return (
     <p id={id} className="text-sm font-medium text-warning">
       <span aria-hidden="true">▲ </span>
@@ -47,11 +47,11 @@ export function FormFooter({
   state,
   showReload = false,
   onReload,
-}: {
+}: Readonly<{
   state: ActionResult | null;
   showReload?: boolean;
   onReload?: () => void;
-}) {
+}>) {
   const failure = state && !state.ok ? state : null;
   return (
     <div className="space-y-2">
@@ -85,7 +85,7 @@ export function TextField({
   rows = 4,
   required = false,
   errors,
-}: {
+}: Readonly<{
   id: string;
   name: string;
   label: string;
@@ -97,7 +97,7 @@ export function TextField({
   rows?: number;
   required?: boolean;
   errors: string[] | undefined;
-}) {
+}>) {
   const counterId = `${id}-count`;
   const errorsId = `${id}-errors`;
   const hasErrors = errors !== undefined && errors.length > 0;

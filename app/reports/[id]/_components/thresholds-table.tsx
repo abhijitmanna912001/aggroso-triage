@@ -19,7 +19,7 @@ const ROW_EMPHASIS: Record<string, string> = {
   WARNING: "border-l-4 border-l-warning",
 };
 
-export function ThresholdBadge({ status }: { status: string }) {
+export function ThresholdBadge({ status }: Readonly<{ status: string }>) {
   const look = LOOKS[status] ?? FALLBACK;
   return (
     <Badge tone={look.tone} className={look.border} icon={<span aria-hidden="true">{look.glyph}</span>}>
@@ -28,7 +28,7 @@ export function ThresholdBadge({ status }: { status: string }) {
   );
 }
 
-export function ThresholdsTable({ thresholds }: { thresholds: Workspace["thresholds"] }) {
+export function ThresholdsTable({ thresholds }: Readonly<{ thresholds: Workspace["thresholds"] }>) {
   if (thresholds.length === 0) {
     return <p className="text-sm text-muted">No threshold checks were stored for this report.</p>;
   }

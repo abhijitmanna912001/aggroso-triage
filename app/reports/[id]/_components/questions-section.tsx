@@ -9,12 +9,12 @@ export function QuestionsSection({
   ws,
   reportId,
   signedIn,
-}: {
+}: Readonly<{
   questions: Workspace["questions"];
   ws: Pick<Workspace, "chunks" | "events" | "thresholds">;
   reportId: number;
   signedIn: boolean;
-}) {
+}>) {
   const sources = buildSources(ws);
   return (
     <Card as="section" id="questions" aria-labelledby="questions-heading" className="scroll-mt-20">

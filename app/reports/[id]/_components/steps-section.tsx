@@ -5,10 +5,10 @@ import { SectionHeader } from "./report-header";
 export function StepsSection({
   steps,
   ws,
-}: {
+}: Readonly<{
   steps: Workspace["steps"];
   ws: Pick<Workspace, "chunks" | "events" | "thresholds">;
-}) {
+}>) {
   const sources = buildSources(ws);
   return (
     <Card as="section" id="steps" aria-labelledby="steps-heading" className="scroll-mt-20">

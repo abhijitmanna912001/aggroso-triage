@@ -9,6 +9,8 @@ import { PageHeader } from "../_components/ui/page-header";
 import { Skeleton } from "../_components/ui/skeleton";
 
 const LINK = "text-accent underline underline-offset-2 hover:no-underline";
+const TH = "py-2 pr-3 whitespace-nowrap";
+const TD = "py-3 pr-3";
 
 function ListSkeleton() {
   return (
@@ -35,28 +37,30 @@ async function EquipmentList() {
           <caption className="sr-only">All equipment with report counts</caption>
           <thead>
             <tr className="border-b border-line">
-              <th scope="col" className="py-2 pr-3">Tag</th>
-              <th scope="col" className="py-2 pr-3">Name</th>
-              <th scope="col" className="py-2 pr-3">Type</th>
-              <th scope="col" className="py-2 pr-3">Reports</th>
-              <th scope="col" className="py-2 pr-3">Open reports</th>
-              <th scope="col" className="py-2">Last report</th>
+              <th scope="col" className={TH}>Tag</th>
+              <th scope="col" className={TH}>Name</th>
+              <th scope="col" className={TH}>Type</th>
+              <th scope="col" className={TH}>Reports</th>
+              <th scope="col" className={TH}>Open reports</th>
+              <th scope="col" className="py-2 whitespace-nowrap">Last report</th>
             </tr>
           </thead>
           <tbody>
             {equipment.map((e) => (
               <tr key={e.id} className="border-b border-line align-top last:border-b-0">
-                <td className="py-3 pr-3">
+                <td className={TD}>
                   <Link href={`/equipment/${e.id}`} className={`${LINK} font-medium`}>
                     {e.tag}
                   </Link>
                 </td>
-                <td className="py-3 pr-3">{e.name}</td>
-                <td className="py-3 pr-3">
-                  <Badge tone="neutral">{e.type}</Badge>
+                <td className={TD}>{e.name}</td>
+                <td className={TD}>
+                  <div className="flex min-h-5 items-center">
+                    <Badge tone="neutral">{e.type}</Badge>
+                  </div>
                 </td>
-                <td className="py-3 pr-3">{e.reportCount}</td>
-                <td className="py-3 pr-3">{e.openReportCount}</td>
+                <td className={TD}>{e.reportCount}</td>
+                <td className={TD}>{e.openReportCount}</td>
                 <td className="whitespace-nowrap py-3">
                   {e.latestReportAt === null ? "No reports yet" : formatUtc(e.latestReportAt)}
                 </td>

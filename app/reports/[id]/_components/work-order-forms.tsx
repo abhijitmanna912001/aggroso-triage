@@ -19,12 +19,12 @@ export function EditWorkOrderForm({
   signedIn,
   expectedVersion,
   initial,
-}: {
+}: Readonly<{
   reportId: number;
   signedIn: boolean;
   expectedVersion: number;
   initial: { title: string; description: string; priority: string };
-}) {
+}>) {
   const [title, setTitle] = useState(initial.title);
   const [description, setDescription] = useState(initial.description);
   const [priority, setPriority] = useState(initial.priority);
@@ -97,11 +97,11 @@ export function ApprovePanel({
   reportId,
   signedIn,
   expectedVersion,
-}: {
+}: Readonly<{
   reportId: number;
   signedIn: boolean;
   expectedVersion: number;
-}) {
+}>) {
   const [note, setNote] = useState("");
   const { state, formAction, router } = useActionForm(approveWorkOrderAction);
 
@@ -139,11 +139,11 @@ export function RejectPanel({
   reportId,
   signedIn,
   expectedVersion,
-}: {
+}: Readonly<{
   reportId: number;
   signedIn: boolean;
   expectedVersion: number;
-}) {
+}>) {
   const [note, setNote] = useState("");
   const { state, formAction, router } = useActionForm(rejectWorkOrderAction);
 

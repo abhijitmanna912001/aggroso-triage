@@ -19,7 +19,7 @@ const RUN_LOOKS: Record<string, { glyph: string; tone: Tone }> = {
   FAILED: { glyph: "✕", tone: "danger" },
 };
 
-function RunStatusBadge({ status }: { status: string }) {
+function RunStatusBadge({ status }: Readonly<{ status: string }>) {
   const look = RUN_LOOKS[status] ?? { glyph: "•", tone: "neutral" as Tone };
   return (
     <Badge tone={look.tone} icon={<span aria-hidden="true">{look.glyph}</span>}>
@@ -36,12 +36,12 @@ export function AnalysisPanel({
   chunks,
   reportId,
   signedIn,
-}: {
+}: Readonly<{
   run: Workspace["latestRun"];
   chunks: Workspace["chunks"];
   reportId: number;
   signedIn: boolean;
-}) {
+}>) {
   const notes = run ? parseRunNotes(run.validationNotes) : null;
 
   return (

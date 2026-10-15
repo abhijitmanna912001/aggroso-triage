@@ -16,13 +16,13 @@ export function Field({
   hint,
   error,
   children,
-}: {
+}: Readonly<{
   id: string;
   label: ReactNode;
   hint?: ReactNode;
   error?: ReactNode;
   children: (props: ControlProps) => ReactNode;
-}) {
+}>) {
   const hintId = hint ? `${id}-hint` : undefined;
   const errorId = error ? `${id}-error` : undefined;
   const describedBy = [hintId, errorId].filter(Boolean).join(" ") || undefined;
@@ -51,11 +51,11 @@ function join(className: string | undefined) {
   return `${controlClasses} ${className ?? ""}`.trim();
 }
 
-export function Input({ className, ...rest }: ComponentProps<"input">) {
+export function Input({ className, ...rest }: Readonly<ComponentProps<"input">>) {
   return <input className={join(className)} {...rest} />;
 }
 
-export function Textarea({ className, ...rest }: ComponentProps<"textarea">) {
+export function Textarea({ className, ...rest }: Readonly<ComponentProps<"textarea">>) {
   return <textarea className={join(className)} {...rest} />;
 }
 
@@ -64,7 +64,7 @@ export function Select({
   className,
   wrapperClassName,
   ...rest
-}: ComponentProps<"select"> & { wrapperClassName?: string }) {
+}: Readonly<ComponentProps<"select"> & { wrapperClassName?: string }>) {
   return (
     <div className={`relative ${wrapperClassName ?? ""}`.trim()}>
       <select className={`${join(className)} appearance-none pr-10`} {...rest} />

@@ -13,7 +13,7 @@ import { Select } from "./ui/field";
 const SELECT_ID = "technician-name";
 const ERROR_ID = "technician-name-error";
 
-export function TechnicianSelect({ current }: { current: string | null }) {
+export function TechnicianSelect({ current }: Readonly<{ current: string | null }>) {
   const router = useRouter();
   // Remembers which name was current when "Switch" was clicked. Once the cookie changes and the page re-renders with a
   // new name, this no longer matches and the picker closes by itself.
@@ -44,39 +44,38 @@ export function TechnicianSelect({ current }: { current: string | null }) {
 
   const nameErrors = state && !state.ok ? state.fieldErrors.name : undefined;
   return (
-    <form action={formAction} className="flex flex-wrap items-start gap-2 text-sm">
-      <div>
-        <label htmlFor={SELECT_ID} className="mr-2">
-          Your name
-        </label>
-        <Select
-          id={SELECT_ID}
-          name="name"
-          defaultValue={current ?? ""}
-          required
-          aria-invalid={nameErrors ? true : undefined}
-          aria-describedby={nameErrors ? ERROR_ID : undefined}
-          className="w-auto!"
-          wrapperClassName="inline-block"
-        >
-          <option value="" disabled>
-            Choose…
+    <form action={formAction} className="flex flex-wrap items-center gap-2 text-sm">
+      <label htmlFor={SELECT_ID}>Your name</label>
+      <Select
+        id={SELECT_ID}
+        name="name"
+        defaultValue={current ?? ""}
+        required
+        aria-invalid={nameErrors ? true : undefined}
+        aria-describedby={nameErrors ? ERROR_ID : undefined}
+        className="w-auto!"
+        wrapperClassName="inline-block"
+      >
+        <option value="" disabled>
+          Choose…
+        </option>
+        {TECHNICIANS.map((name) => (
+          <option key={name} value={name}>
+            {name}
           </option>
-          {TECHNICIANS.map((name) => (
-            <option key={name} value={name}>
-              {name}
-            </option>
-          ))}
-        </Select>
-        <FieldErrors id={ERROR_ID} errors={nameErrors} />
-        {state && !state.ok ? <FormError message={state.formError} /> : null}
-      </div>
+        ))}
+      </Select>
       <SubmitButton label={current === null ? "Continue" : "Switch"} pendingLabel="Saving…" />
       {current !== null ? (
         <Button type="button" variant="secondary" size="md" onClick={() => setSwitchingFrom(null)}>
           Cancel
         </Button>
       ) : null}
+      {/* Messages sit on their own line so they cannot shift the vertical centering of the controls above. */}
+      <div className="basis-full empty:hidden">
+        <FieldErrors id={ERROR_ID} errors={nameErrors} />
+        {state && !state.ok ? <FormError message={state.formError} /> : null}
+      </div>
     </form>
   );
 }

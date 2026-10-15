@@ -4,7 +4,7 @@ import type { Workspace } from "./evidence-chips";
 import { PriorityBadge, versionAuthor } from "./work-order-section";
 
 // Rail summary of the work order. Shown from lg only; the page hides it below that.
-export function WorkOrderSummary({ workOrder }: { workOrder: Workspace["workOrder"] }) {
+export function WorkOrderSummary({ workOrder }: Readonly<{ workOrder: Workspace["workOrder"] }>) {
   const latest = workOrder?.versions[0] ?? null;
   return (
     <Card as="section" aria-labelledby="work-order-summary-heading" className="space-y-3 text-sm">

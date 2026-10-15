@@ -6,7 +6,7 @@ import { PageHeader } from "@/app/_components/ui/page-header";
 import { formatUtc } from "@/lib/ui/format";
 import type { Workspace } from "./evidence-chips";
 
-export function ReportHeader({ report }: { report: Workspace["report"] }) {
+export function ReportHeader({ report }: Readonly<{ report: Workspace["report"] }>) {
   return (
     <PageHeader
       title={`Report #${report.id}`}
@@ -35,12 +35,12 @@ export function SectionHeader({
   title,
   description,
   count,
-}: {
+}: Readonly<{
   id: string;
   title: string;
   description?: ReactNode;
   count?: number;
-}) {
+}>) {
   return (
     <div className="mb-4 space-y-1">
       <div className="flex flex-wrap items-center gap-2">

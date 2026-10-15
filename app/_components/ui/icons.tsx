@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 export type IconProps = { className?: string };
 
-function Icon({ className, children }: IconProps & { children: ReactNode }) {
+function Icon({ className, children }: Readonly<IconProps & { children: ReactNode }>) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

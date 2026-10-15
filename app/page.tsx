@@ -10,6 +10,8 @@ import { PageHeader } from "./_components/ui/page-header";
 import { Skeleton } from "./_components/ui/skeleton";
 
 const LINK = "text-accent underline underline-offset-2 hover:no-underline";
+const TH = "py-2 pr-3 whitespace-nowrap";
+const TD = "py-3 pr-3";
 
 function ListSkeleton() {
   return (
@@ -42,38 +44,42 @@ async function ReportList() {
           <caption className="sr-only">Most recent reports</caption>
           <thead>
             <tr className="border-b border-line">
-              <th scope="col" className="py-2 pr-3">Report</th>
-              <th scope="col" className="py-2 pr-3">Equipment</th>
-              <th scope="col" className="py-2 pr-3">Issue</th>
-              <th scope="col" className="py-2 pr-3">Reported</th>
-              <th scope="col" className="py-2 pr-3">Report status</th>
-              <th scope="col" className="py-2">Work order</th>
+              <th scope="col" className={TH}>Report</th>
+              <th scope="col" className={TH}>Equipment</th>
+              <th scope="col" className={TH}>Issue</th>
+              <th scope="col" className={TH}>Reported</th>
+              <th scope="col" className={TH}>Status</th>
+              <th scope="col" className="py-2 whitespace-nowrap">Work order</th>
             </tr>
           </thead>
           <tbody>
             {reports.map((r) => (
               <tr key={r.id} className="border-b border-line align-top last:border-b-0">
-                <td className="py-3 pr-3">
+                <td className={TD}>
                   <Link href={`/reports/${r.id}`} className={`${LINK} font-medium`}>
                     #{r.id}
                   </Link>
                 </td>
-                <td className="py-3 pr-3">
+                <td className={TD}>
                   <span className="font-medium">{r.equipmentTag}</span>
                   <br />
                   <span className="text-muted">{r.equipmentName}</span>
                 </td>
-                <td className="py-3 pr-3">{r.issue}</td>
-                <td className="py-3 pr-3">
+                <td className={TD}>{r.issue}</td>
+                <td className={TD}>
                   {r.reportedBy}
                   <br />
                   <span className="whitespace-nowrap text-muted">{formatUtc(r.createdAt)}</span>
                 </td>
-                <td className="py-3 pr-3">
-                  <ReportStatusBadge status={r.status} />
+                <td className={TD}>
+                  <div className="flex min-h-5 items-center">
+                    <ReportStatusBadge status={r.status} />
+                  </div>
                 </td>
                 <td className="py-3">
-                  <WorkOrderStatusBadge status={r.workOrderStatus} />
+                  <div className="flex min-h-5 items-center">
+                    <WorkOrderStatusBadge status={r.workOrderStatus} />
+                  </div>
                 </td>
               </tr>
             ))}
@@ -95,7 +101,7 @@ async function ReportList() {
             </p>
             <p className="mt-1">{r.issue}</p>
             <p className="mt-1 text-muted">Reported by {r.reportedBy}</p>
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="mt-2 flex flex-wrap items-center gap-2">
               <ReportStatusBadge status={r.status} />
               <WorkOrderStatusBadge status={r.workOrderStatus} />
             </div>

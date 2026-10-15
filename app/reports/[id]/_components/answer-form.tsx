@@ -10,11 +10,11 @@ export function AnswerForm({
   reportId,
   questionId,
   signedIn,
-}: {
+}: Readonly<{
   reportId: number;
   questionId: number;
   signedIn: boolean;
-}) {
+}>) {
   const [answer, setAnswer] = useState("");
   const { state, formAction } = useActionForm(answerQuestionAction, () => setAnswer(""));
 

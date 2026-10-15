@@ -18,7 +18,7 @@ import Loading from "./loading";
 
 // params and the cookie are request data and the reads are uncached, so all of it happens here, under <Suspense>.
 // A failed query is not caught, so it reaches app/error.tsx.
-async function Workspace({ params }: { params: Promise<{ id: string }> }) {
+async function Workspace({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
   const { id: rawId } = await params;
   const reportId = /^[0-9]+$/.test(rawId) ? Number(rawId) : NaN;
   if (!Number.isSafeInteger(reportId) || reportId <= 0) notFound();

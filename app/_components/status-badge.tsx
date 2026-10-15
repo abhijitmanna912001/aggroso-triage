@@ -26,7 +26,7 @@ const WORK_ORDER: Record<string, Look> = {
 
 const NONE: Look = { text: "No work order", tone: "neutral", icon: "dot", border: "border-dotted" };
 
-function Pill({ look }: { look: Look }) {
+function Pill({ look }: Readonly<{ look: Look }>) {
   const Icon = ICONS[look.icon];
   return (
     <Badge tone={look.tone} icon={<Icon />} className={look.border}>
@@ -35,11 +35,11 @@ function Pill({ look }: { look: Look }) {
   );
 }
 
-export function ReportStatusBadge({ status }: { status: string }) {
+export function ReportStatusBadge({ status }: Readonly<{ status: string }>) {
   return <Pill look={REPORT[status] ?? { ...NONE, text: status, icon: "question" }} />;
 }
 
-export function WorkOrderStatusBadge({ status }: { status: string | null }) {
+export function WorkOrderStatusBadge({ status }: Readonly<{ status: string | null }>) {
   return (
     <Pill look={status === null ? NONE : (WORK_ORDER[status] ?? { ...NONE, text: status, icon: "question" })} />
   );

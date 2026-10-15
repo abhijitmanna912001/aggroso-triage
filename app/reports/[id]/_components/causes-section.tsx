@@ -20,11 +20,11 @@ export function CausesSection({
   hypotheses,
   run,
   ws,
-}: {
+}: Readonly<{
   hypotheses: Workspace["hypotheses"];
   run: Workspace["latestRun"];
   ws: Pick<Workspace, "chunks" | "events" | "thresholds">;
-}) {
+}>) {
   const sources = buildSources(ws);
   return (
     <Card as="section" id="causes" aria-labelledby="causes-heading" className="scroll-mt-20">

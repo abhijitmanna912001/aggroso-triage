@@ -17,7 +17,9 @@ export function ObservationsSection({
   observations,
   reportId,
   signedIn,
-}: Pick<Workspace, "events" | "readings" | "thresholds" | "observations"> & { reportId: number; signedIn: boolean }) {
+}: Readonly<
+  Pick<Workspace, "events" | "readings" | "thresholds" | "observations"> & { reportId: number; signedIn: boolean }
+>) {
   return (
     <Card as="section" id="observations" aria-labelledby="observations-heading" className="scroll-mt-20">
       <SectionHeader

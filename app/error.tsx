@@ -5,7 +5,7 @@ import { Button } from "./_components/ui/button";
 
 // Fixed text only: error.message and error.digest are never shown. retry() re-fetches and re-renders the segment;
 // reset() would only clear the error state and show the same failed result.
-export default function ErrorPage({ retry }: { error: Error & { digest?: string }; retry: () => void }) {
+export default function ErrorPage({ retry }: Readonly<{ error: Error & { digest?: string }; retry: () => void }>) {
   return (
     <div className="space-y-4">
       <Alert tone="danger">

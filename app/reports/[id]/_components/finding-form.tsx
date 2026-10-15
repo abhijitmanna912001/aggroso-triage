@@ -9,7 +9,7 @@ import { FormFooter, SignInNotice, TextField, fieldErrorsOf, useActionForm } fro
 import { FieldErrors } from "@/app/_components/form-messages";
 
 function shorten(text: string, max: number): string {
-  const flat = text.replace(/\s+/g, " ").trim();
+  const flat = text.replaceAll(/\s+/g, " ").trim();
   return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat;
 }
 
@@ -17,11 +17,11 @@ export function FindingForm({
   reportId,
   signedIn,
   hypotheses,
-}: {
+}: Readonly<{
   reportId: number;
   signedIn: boolean;
   hypotheses: { id: number; cause: string }[];
-}) {
+}>) {
   const [description, setDescription] = useState("");
   const [hypothesisId, setHypothesisId] = useState("");
   const { state, formAction } = useActionForm(confirmFindingAction, () => {

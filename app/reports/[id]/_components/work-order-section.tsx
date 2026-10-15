@@ -15,7 +15,7 @@ const PRIORITY_LOOKS: Record<string, { glyph: string; tone: Tone }> = {
   URGENT: { glyph: "▇", tone: "danger" },
 };
 
-export function PriorityBadge({ priority }: { priority: string }) {
+export function PriorityBadge({ priority }: Readonly<{ priority: string }>) {
   const look = PRIORITY_LOOKS[priority] ?? PRIORITY_LOOKS.LOW;
   return (
     <Badge tone={look.tone} icon={<span aria-hidden="true">{look.glyph}</span>}>
@@ -32,11 +32,11 @@ export function WorkOrderSection({
   workOrder,
   reportId,
   signedIn,
-}: {
+}: Readonly<{
   workOrder: Workspace["workOrder"];
   reportId: number;
   signedIn: boolean;
-}) {
+}>) {
   const latest = workOrder?.versions[0] ?? null;
   const approved = workOrder?.status === "APPROVED";
   const decided = workOrder !== null && (approved || workOrder.status === "REJECTED");

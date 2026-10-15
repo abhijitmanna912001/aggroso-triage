@@ -7,9 +7,11 @@ export function Card({
   className,
   children,
   ...rest
-}: {
-  as?: "div" | "section" | "article";
-} & HTMLAttributes<HTMLElement>) {
+}: Readonly<
+  {
+    as?: "div" | "section" | "article";
+  } & HTMLAttributes<HTMLElement>
+>) {
   return (
     <Tag className={`${cardClasses} ${className ?? ""}`.trim()} {...rest}>
       {children}

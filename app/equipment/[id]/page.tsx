@@ -12,6 +12,8 @@ import { formatUtc } from "@/lib/ui/format";
 import { describeHistoryType, GROUP_LABELS, historyTone } from "@/lib/ui/history-view";
 
 const LINK = "text-accent underline underline-offset-2 hover:no-underline";
+const TH = "py-2 pr-3 whitespace-nowrap";
+const TD = "py-3 pr-3";
 
 function PageSkeleton() {
   return (
@@ -25,7 +27,7 @@ function PageSkeleton() {
 
 // params and the database reads are request-time and uncached, so all of it happens here, under <Suspense>.
 // A failed query is not caught, so it reaches app/error.tsx.
-async function EquipmentHistory({ params }: { params: Promise<{ id: string }> }) {
+async function EquipmentHistory({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
   const { id: rawId } = await params;
   const equipmentId = /^[0-9]+$/.test(rawId) ? Number(rawId) : NaN;
   if (!Number.isSafeInteger(equipmentId) || equipmentId <= 0) notFound();
@@ -62,30 +64,34 @@ async function EquipmentHistory({ params }: { params: Promise<{ id: string }> })
                   <caption className="sr-only">Reports for {equipment.tag}, newest first</caption>
                   <thead>
                     <tr className="border-b border-line">
-                      <th scope="col" className="py-2 pr-3">Report</th>
-                      <th scope="col" className="py-2 pr-3">Created</th>
-                      <th scope="col" className="py-2 pr-3">Reported by</th>
-                      <th scope="col" className="py-2 pr-3">Issue</th>
-                      <th scope="col" className="py-2 pr-3">Report status</th>
-                      <th scope="col" className="py-2">Work order</th>
+                      <th scope="col" className={TH}>Report</th>
+                      <th scope="col" className={TH}>Created</th>
+                      <th scope="col" className={TH}>Reported by</th>
+                      <th scope="col" className={TH}>Issue</th>
+                      <th scope="col" className={TH}>Status</th>
+                      <th scope="col" className="py-2 whitespace-nowrap">Work order</th>
                     </tr>
                   </thead>
                   <tbody>
                     {reports.map((r) => (
                       <tr key={r.id} className="border-b border-line align-top last:border-b-0">
-                        <td className="py-3 pr-3">
+                        <td className={TD}>
                           <Link href={`/reports/${r.id}`} className={`${LINK} font-medium`}>
                             #{r.id}
                           </Link>
                         </td>
-                        <td className="whitespace-nowrap py-3 pr-3">{formatUtc(r.createdAt)}</td>
-                        <td className="py-3 pr-3">{r.reportedBy}</td>
-                        <td className="py-3 pr-3">{r.issue}</td>
-                        <td className="py-3 pr-3">
-                          <ReportStatusBadge status={r.status} />
+                        <td className={`${TD} whitespace-nowrap`}>{formatUtc(r.createdAt)}</td>
+                        <td className={TD}>{r.reportedBy}</td>
+                        <td className={TD}>{r.issue}</td>
+                        <td className={TD}>
+                          <div className="flex min-h-5 items-center">
+                            <ReportStatusBadge status={r.status} />
+                          </div>
                         </td>
                         <td className="py-3">
-                          <WorkOrderStatusBadge status={r.workOrderStatus} />
+                          <div className="flex min-h-5 items-center">
+                            <WorkOrderStatusBadge status={r.workOrderStatus} />
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -104,7 +110,7 @@ async function EquipmentHistory({ params }: { params: Promise<{ id: string }> })
                     </div>
                     <p className="mt-1">{r.issue}</p>
                     <p className="mt-1 text-muted">Reported by {r.reportedBy}</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
                       <ReportStatusBadge status={r.status} />
                       <WorkOrderStatusBadge status={r.workOrderStatus} />
                     </div>

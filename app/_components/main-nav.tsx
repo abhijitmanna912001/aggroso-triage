@@ -14,7 +14,7 @@ const LINK_BASE =
   "inline-flex min-h-11 items-center border-b-2 px-1 text-sm underline-offset-4 hover:text-accent";
 
 // `active` is the href of the current link, or null when no link matches.
-export function NavLinks({ active }: { active: NavHref | null }) {
+export function NavLinks({ active }: Readonly<{ active: NavHref | null }>) {
   return (
     <nav aria-label="Main" className="flex gap-4">
       {LINKS.map(({ href, label }) => {

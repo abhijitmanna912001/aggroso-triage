@@ -38,7 +38,7 @@ export type RetrievalQueryInput = {
 };
 
 function collapse(text: string): string {
-  return text.replace(/\s+/g, " ").trim();
+  return text.replaceAll(/\s+/g, " ").trim();
 }
 
 function truncateAtWord(text: string, max: number): string {
@@ -53,7 +53,7 @@ function truncateAtWord(text: string, max: number): string {
 export function buildRetrievalQuery(input: RetrievalQueryInput): string {
   const sensors = input.thresholds
     .filter((t) => ABNORMAL_STATUSES.has(t.status))
-    .map((t) => t.sensor.replace(/_/g, " "));
+    .map((t) => t.sensor.replaceAll("_", " "));
 
   const parts = [
     EQUIPMENT_LABELS[input.equipmentType],

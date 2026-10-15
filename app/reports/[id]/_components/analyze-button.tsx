@@ -11,11 +11,11 @@ export function AnalyzeButton({
   reportId,
   signedIn,
   hasRun,
-}: {
+}: Readonly<{
   reportId: number;
   signedIn: boolean;
   hasRun: boolean;
-}) {
+}>) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState<ActionResult | null, FormData>(
     (_previous, formData) => analyzeReportAction(formData),

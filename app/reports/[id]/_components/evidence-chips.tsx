@@ -19,7 +19,7 @@ const TYPE_WORDS: Record<string, string> = { manual: "Manual", event: "Event", t
 const TYPE_ICONS: Record<string, typeof Info> = { manual: Info, event: Clock, threshold: AlertTriangle };
 
 // Every label and detail is rendered as text. The type word stays visible, the icon is decoration.
-export function EvidenceChips({ citations, sources }: { citations: Citation[]; sources: EvidenceSources }) {
+export function EvidenceChips({ citations, sources }: Readonly<{ citations: Citation[]; sources: EvidenceSources }>) {
   const resolved = resolveCitations(citations, sources);
   if (resolved.length === 0) {
     return <p className="mt-3 text-sm text-muted">No evidence cited</p>;

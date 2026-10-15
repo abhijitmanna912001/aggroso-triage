@@ -16,12 +16,12 @@ export function Alert({
   title,
   id,
   children,
-}: {
+}: Readonly<{
   tone: Tone;
   title?: string;
   id?: string;
   children?: ReactNode;
-}) {
+}>) {
   const ToneIcon = ICONS[tone];
   const role = tone === "danger" || tone === "warning" ? "alert" : "status";
   return (

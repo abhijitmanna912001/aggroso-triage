@@ -9,12 +9,12 @@ export function FindingsSection({
   hypotheses,
   reportId,
   signedIn,
-}: {
+}: Readonly<{
   findings: Workspace["findings"];
   hypotheses: Workspace["hypotheses"];
   reportId: number;
   signedIn: boolean;
-}) {
+}>) {
   const causes = new Map(hypotheses.map((h) => [h.id, h.cause] as const));
   return (
     <Card as="section" id="findings" aria-labelledby="findings-heading" className="scroll-mt-20">

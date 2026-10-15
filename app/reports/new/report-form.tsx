@@ -50,7 +50,7 @@ function describeRule(rule: FormRule): string {
   return `${rule.unit}. Warning ${wording} ${rule.warning}, critical ${wording} ${rule.critical}.`;
 }
 
-function SectionHeading({ id, title, help }: { id: string; title: string; help: string }) {
+function SectionHeading({ id, title, help }: Readonly<{ id: string; title: string; help: string }>) {
   return (
     <div className="mb-4 space-y-1">
       <h2 id={id} className="font-semibold">{title}</h2>
@@ -59,7 +59,7 @@ function SectionHeading({ id, title, help }: { id: string; title: string; help: 
   );
 }
 
-export function ReportForm({ equipment, rules }: { equipment: FormEquipment[]; rules: FormRules }) {
+export function ReportForm({ equipment, rules }: Readonly<{ equipment: FormEquipment[]; rules: FormRules }>) {
   const router = useRouter();
   const [state, formAction] = useActionState<ActionResult | null, FormData>(submitReport, null);
 
@@ -297,6 +297,7 @@ export function ReportForm({ equipment, rules }: { equipment: FormEquipment[]; r
                 const rule = sensors.find((r) => r.sensor === row.sensor);
                 const noEquipmentHint = selected === undefined ? `${s}-hint` : undefined;
                 const ruleHint = rule ? `${s}-rule` : undefined;
+                const unitSuffix = rule ? ` (${rule.unit})` : "";
                 return (
                   <li key={row.key} className={`${ROW} grid gap-3 sm:grid-cols-2`}>
                     <div>
@@ -335,7 +336,7 @@ export function ReportForm({ equipment, rules }: { equipment: FormEquipment[]; r
                         )}
                       </Field>
                     </div>
-                    <Field id={v} label={`Reading ${index + 1} value${rule ? ` (${rule.unit})` : ""}`}>
+                    <Field id={v} label={`Reading ${index + 1} value${unitSuffix}`}>
                       {(p) => (
                         <>
                           <Input
